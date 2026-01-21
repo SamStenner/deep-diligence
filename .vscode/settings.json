@@ -1,0 +1,18 @@
+{
+  "editor.tabSize": 2,
+  "workbench.editor.customLabels.patterns": {
+    "**/app/**/page.tsx": "${dirname} - page.tsx",
+    "**/app/**/layout.tsx": "${dirname} - layout.tsx",
+    "*/*/**/index.{ts,js,tsx,jsx}": "${dirname} - ${filename}.${extname}",
+    "**/app/**/{page,layout,route}.{tsx,jsx,ts,js}": "${dirname} - ${filename}.${extname}"
+  },
+  "typescript.preferences.autoImportSpecifierExcludeRegexes": [
+    "@radix-ui",
+    "next/router",
+    "next/dist",
+    "^lucide-react/dist/lucide-react.suffixed$"
+  ],
+  "search.exclude": {
+    "apps/firecrawl/**": true
+  },
+}
