@@ -2,15 +2,13 @@ import { Search } from "lucide-react";
 import Link from "next/link";
 import { HTMLAttributes } from "react";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
-type MainLayoutProps = HTMLAttributes<HTMLDivElement> & {
-  fullscreen?: boolean;
-};
+type MainLayoutProps = HTMLAttributes<HTMLDivElement>;
 
 export function Layout({
   children,
   className,
-  fullscreen,
   ...props
 }: MainLayoutProps) {
   return (
@@ -29,6 +27,7 @@ export function Layout({
             </div>
             <span className="text-lg font-semibold">DeepDiligence</span>
           </Link>
+          <ThemeToggle />
         </div>
       </header>
 

@@ -1,5 +1,6 @@
 import {
   generateText,
+  InferToolOutput,
   InferUITools,
   Output,
   stepCountIs,
@@ -15,6 +16,7 @@ import { tools } from "./agents/orchestrator";
 import { devToolsMiddleware } from "@ai-sdk/devtools";
 import { getProjectById } from "../data/db";
 import { modelMessagesToUiMessage } from "../ai-utils";
+import { AgentContext } from "./agents/sub.agents";
 
 type AgentTools = typeof tools;
 
@@ -40,7 +42,7 @@ const stopWhen = [
 ];
 
 const createAgent = (projectId: string) => {
-    const context = { projectId };
+    const context: AgentContext = { projectId };
     return new ToolLoopAgent({
       instructions: "You are a research agent. You are tasked with researching the project and providing a report. You MUST create a plan before spawning agents. Once the agents are completed, you need to update your plan. You may need to call agents multiple times to complete the plan. Once your plan is completed, you will need to mark the task as done. You MUST call the done tool before stopping.",
       toolChoice: "required",
@@ -62,3 +64,4 @@ export const generate = async (projectId: string) => {
 
 type AgentUITools = InferUITools<AgentTools>;
 type AgentUIMessage = UIMessage<unknown, UIDataTypes, AgentUITools>;
+

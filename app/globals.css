@@ -7,8 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: JetBrains Mono, monospace;
+  --font-sans: var(--font-sans, "Source Sans 3"), -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-serif: var(--font-serif, Lora), Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -45,7 +46,6 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
-  --font-serif: Georgia, serif;
   --radius: 0.5rem;
   --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
   --tracking-tight: calc(var(--tracking-normal) - 0.025em);
@@ -106,9 +106,6 @@
   --sidebar-border: oklch(0.92 0 0);
   --sidebar-ring: oklch(0.2 0.02 245);
   --destructive-foreground: oklch(0.98 0 0);
-  --font-sans: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: JetBrains Mono, monospace;
   --shadow-color: oklch(0% 0 0);
   --shadow-opacity: 0.05;
   --shadow-blur: 12px;
@@ -167,9 +164,6 @@
   --sidebar-ring: oklch(0.85 0 0);
   --destructive-foreground: oklch(0.95 0 0);
   --radius: 0.5rem;
-  --font-sans: Inter, -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: JetBrains Mono, monospace;
   --shadow-color: oklch(0% 0 0);
   --shadow-opacity: 0.5;
   --shadow-blur: 24px;
@@ -205,5 +199,19 @@
   button,
   a {
     @apply cursor-pointer;
+  }
+  
+  /* Use serif font for prose/document content */
+  .prose {
+    font-family: var(--font-serif);
+  }
+  .prose h1,
+  .prose h2,
+  .prose h3,
+  .prose h4,
+  .prose h5,
+  .prose h6 {
+    font-family: var(--font-serif);
+    font-weight: 600;
   }
 }

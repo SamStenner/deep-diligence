@@ -294,16 +294,16 @@ function WizardProgress({
 export function ProjectForm() {
   const [currentStep, setCurrentStep] = React.useState(0);
   const [formData, setFormData] = React.useState<FormData>({
-    companyName: "Adam AI Labs",
-    companyWebsite: "",
+    companyName: "Adam CAD",
+    companyWebsite: "https://adam.new",
     industry: "technology",
-    foundedYear: "",
-    headquarters: "",
-    employeeCount: "",
+    foundedYear: "2024",
+    headquarters: "San Francisco, CA",
+    employeeCount: "4",
     dealType: "acquisition",
     dealSize: "",
     investmentThesis: "",
-    existingInfo: "",
+    existingInfo: "Adam is an AI CAD company that helps you design and create 3D models using AI. They are a YC W25 company.",
     keyQuestions: "",
     timeline: "",
     priorityAreas: [],

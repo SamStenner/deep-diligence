@@ -10,7 +10,6 @@ export const getProjects = async (): Promise<Project[]> => {
 export const getProjectById = async (
   id: string,
 ): Promise<Project | undefined> => {
-  console.log("Getting project by id:", id);
   const projectRecords = await db
     .select()
     .from(projects)

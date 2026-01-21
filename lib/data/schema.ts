@@ -101,3 +101,39 @@ export const projectResearch = pgTable("project_researches", {
 export type ProjectResearch = typeof projectResearch.$inferSelect;
 
 export type Research = Awaited<ReturnType<typeof generate>>;
+
+// Email conversation status enum
+export const emailStatusEnum = pgEnum("email_status", [
+  "pending",
+  "replied",
+  "timeout",
+  "failed",
+]);
+
+export type EmailStatus = (typeof emailStatusEnum.enumValues)[number];
+
+// Track email conversations for the contact agent
+export const emailConversations = pgTable("email_conversations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id")
+    .references(() => projects.id)
+    .notNull(),
+  emailId: text("email_id"), // ID from the email provider (Resend)
+  messageId: text("message_id"), // RFC 5322 Message-ID header for threading
+  waitTokenId: text("wait_token_id"), // Trigger.dev wait token ID
+  recipientEmail: text("recipient_email").notNull(),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  status: emailStatusEnum("status").notNull().default("pending"),
+  sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+  repliedAt: timestamp("replied_at", { withTimezone: true }),
+  replyContent: text("reply_content"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type EmailConversation = typeof emailConversations.$inferSelect;

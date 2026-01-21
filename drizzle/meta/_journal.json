@@ -8,6 +8,20 @@
       "when": 1768941256381,
       "tag": "0000_shocking_juggernaut",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1768962451252,
+      "tag": "0001_spooky_malice",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1768968872132,
+      "tag": "0002_special_nightshade",
+      "breakpoints": true
     }
   ]
 }

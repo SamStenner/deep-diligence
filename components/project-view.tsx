@@ -2,20 +2,26 @@
 
 import * as React from "react";
 import {
-  ArrowLeftIcon,
   Brain,
-  CheckCircle2,
+  ChevronDown,
   ChevronRight,
-  ChevronsUpDown,
-  ClipboardList,
-  GalleryVerticalEnd,
+  FileText,
   icons,
-  Search,
+  Loader2,
+  Share2,
+  Sparkles,
 } from "lucide-react";
 import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sidebar,
@@ -35,14 +41,20 @@ import {
 import { cn } from "@/lib/utils";
 import type { Project, ProjectResearch, Research } from "@/lib/data/schema";
 import { Streamdown } from "streamdown";
-import { AgentInput, subAgentRegistry, SubAgentUIMessage } from "@/lib/research/agents/sub.agents";
+import { SubAgent, type AgentInput, type SubAgentUIMessage } from "@/lib/research/agents/sub.agents";
 import { Content } from "./content";
 import { isToolUIPart } from "ai";
-import { useState } from 'react';
+import { HTMLAttributes, useEffect, useState } from 'react';
+import { AgentIcon, SubAgentPropertiesInput, subAgentPropertiesRegistry } from "@/lib/research/agents/agent.properties";
+import { BackdropCard } from "./ui/backdrop-card";
+import { ThemeToggle } from "./ui/theme-toggle";
+import { useTheme } from "next-themes";
+import { StatsGauges } from "./ui/gauge-chart";
 
 function parseResearch(research: Research) {
   const results = research.parts.filter((p) => isToolUIPart(p));
-  const doneResult = results.find((r) => r.type === "tool-done" && r.state === "input-available")
+  const doneResult = results.find((r) => r.type === "tool-done" && r.state === "output-available")
+  console.log("doneResult", results);
   const outputResults = results.filter((r) => r.state === "output-available");
   const latestPlan = outputResults.findLast((r) => r.type === "tool-updatePlan")?.input.plan
   const subAgents = outputResults.filter((r) => r.type === "tool-spawnAgent").flatMap((r) => {
@@ -70,18 +82,8 @@ function MarkdownContent({ content }: { content: string }) {
 
 function SubAgentView({ agent }: { agent: SubAgentUIMessage }) {
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <CheckCircle2 className="size-5 text-green-600" />
-            Research Findings
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Content parts={agent.parts} />
-        </CardContent>
-      </Card>
+    <div className="space-y-3 bg-card p-6 rounded-xl h-full">
+      <Content parts={agent.parts} />
     </div>
   );
 }
@@ -93,17 +95,48 @@ type ProjectViewProps = {
 
 export function ProjectView({ project, research }: ProjectViewProps) {
   if (!research) {
-    return <div>Research generating...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <Loader2 className="size-4 animate-spin" />
+          <span>Generating research...</span>
+        </div>
+      </div>
+    );
   }
   const parsed = parseResearch(research.research);
   const [selectedTab, setSelectedTab] = useState<string | null>(null);
-  const selectedSubAgent = parsed.subAgents.find((a) => a.id === selectedTab);
+  const [mounted, setMounted] = useState(false);
+  const selectedSubAgentMessage = parsed.subAgents.find((a) => a.id === selectedTab);
+  const subAgentProperties = selectedSubAgentMessage ? subAgentPropertiesRegistry[selectedSubAgentMessage.input.subAgent] : null;
+  const images = selectedSubAgentMessage ? subAgentImages[selectedSubAgentMessage.input.subAgent] : null;
+  const { resolvedTheme } = useTheme();
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Use "light" as default during SSR to prevent hydration mismatch
+  const theme = mounted ? (resolvedTheme as "light" | "dark") : "light";
+  const subImage = images?.[theme] ?? images?.light;
+  const leadAgentImage = leadAgentImages[theme];
   return (
-    <SidebarProvider className="h-full min-h-screen w-full">
-      <Sidebar className="border-r" collapsible="icon">
-        <SidebarHeader>
-          <TeamSwitcher />
+    <SidebarProvider className="h-full w-full">
+      <Sidebar className="border-r border-border/50" collapsible="icon">
+        <SidebarHeader className="border-b border-border/50">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" className="hover:bg-transparent cursor-default">
+                <div className="flex items-center justify-center size-8 rounded-md bg-primary text-primary-foreground">
+                  <Sparkles className="size-4" />
+                </div>
+                <div className="flex flex-col gap-0.5 leading-none">
+                  <span className="font-semibold">{project.companyName}</span>
+                  <span className="text-xs text-muted-foreground">Research Report</span>
+                </div>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
         </SidebarHeader>
 
         <SidebarContent>
@@ -117,9 +150,6 @@ export function ProjectView({ project, research }: ProjectViewProps) {
                   >
                     <Brain className="size-4" />
                     <span>Lead Analyst</span>
-                    {parsed.status === "completed" && (
-                      <CheckCircle2 className="ml-auto size-4 text-green-600" />
-                    )}
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -129,21 +159,21 @@ export function ProjectView({ project, research }: ProjectViewProps) {
           <SidebarSeparator />
 
           <SidebarGroup>
-            <SidebarGroupLabel className="flex items-center gap-2">
-              Specialist Analysts
+            <SidebarGroupLabel>
+              Specialists
             </SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {parsed.subAgents.map((agent) => {
                   const id = agent.input.subAgent
-                  const subagent = subAgentRegistry[id];
+                  const subagent = subAgentPropertiesRegistry[id];
                   return (
                     <SidebarMenuItem key={agent.id}>
                       <SidebarMenuButton
                         isActive={selectedTab === agent.id}
                         onClick={() => setSelectedTab(agent.id)}
                       >
-                        <Icon icon={subagent.icon} />
+                        <Icon icon={subagent.icon} className="size-4" />
                         <span className="truncate">{subagent.name}</span>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -155,106 +185,168 @@ export function ProjectView({ project, research }: ProjectViewProps) {
         </SidebarContent>
       </Sidebar>
 
-      <SidebarInset className="flex flex-col">
-        <header className="flex h-12 shrink-0 sticky top-0 items-center gap-2 border-b px-4 bg-background z-10">
-          <SidebarTrigger />
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <SidebarInset className="flex flex-col bg-muted/30">
+        <header className="flex h-14 shrink-0 sticky top-0 items-center gap-3 border-b border-border/50 px-6 bg-background/80 backdrop-blur-sm z-10">
+          <SidebarTrigger className="-ml-2" />
+          <div className="h-4 w-px bg-border" />
+          <nav className="flex items-center gap-2 text-sm">
             <Link
               href="/"
-              className="hover:text-foreground transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Projects
             </Link>
-            <ChevronRight className="size-3" />
-            <span className="text-foreground font-medium">
+            <ChevronRight className="size-3 text-muted-foreground/50" />
+            <span className="font-medium">
               {project.companyName}
             </span>
-          </div>
+          </nav>
 
           <div className="ml-auto flex items-center gap-2">
-            <Badge
-              variant={parsed.status === "completed" ? "default" : "secondary"}
-              className={cn(
-                parsed.status === "completed" &&
-                "bg-green-600 hover:bg-green-700"
-              )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                // TODO: Implement share functionality
+                navigator.clipboard.writeText(window.location.href);
+              }}
             >
-              {parsed.status === "completed" ? "Completed" : "In Progress"}
-            </Badge>
+              <Share2 className="size-4" />
+              <span className="hidden sm:inline">Share</span>
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <FileText className="size-4" />
+                  <span className="hidden sm:inline">Export</span>
+                  <ChevronDown className="size-3 opacity-50" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => window.print()}>
+                  <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h6v6h6v10H6z" />
+                    <path d="M8 12h8v2H8zm0 4h8v2H8z" />
+                  </svg>
+                  <span>PDF</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  // TODO: Implement Google Docs export
+                  console.log("Export to Google Docs");
+                }}>
+                  <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M14.727 6.727H14V0H4.91c-.905 0-1.637.732-1.637 1.636v20.728c0 .904.732 1.636 1.636 1.636h14.182c.904 0 1.636-.732 1.636-1.636V6.727h-6zm-.545 10.455H7.09v-1.364h7.09v1.364zm2.727-2.727H7.091v-1.364h9.818v1.364zm0-2.728H7.091V10.364h9.818v1.363zM14.727 6h5.454l-5.454-5.454V6z" />
+                  </svg>
+                  <span>Google Docs</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  // TODO: Implement Word export
+                  console.log("Export to Word");
+                }}>
+                  <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M15.5 2H8.6c-.4 0-.8.2-1.1.5-.3.3-.5.7-.5 1.1v16.8c0 .4.2.8.5 1.1.3.3.7.5 1.1.5h10.8c.4 0 .8-.2 1.1-.5.3-.3.5-.7.5-1.1V7.5L15.5 2z" />
+                    <path d="M15 2v6h6" fill="none" stroke="currentColor" strokeWidth="1" />
+                    <path d="M7 13.5L8.5 18l1.5-4.5L11.5 18 13 13.5" fill="none" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Microsoft Word</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <ThemeToggle />
           </div>
         </header>
 
-        <ScrollArea className="flex-1">
-          <div className="p-6 max-w-6xl mx-auto">
-            {selectedTab === null ? (
-              <div className="space-y-6">
-                <div>
-                  <h1 className="text-2xl font-bold tracking-tight">
-                    {project.companyName}
-                  </h1>
-                  <p className="text-muted-foreground mt-1">
-                    AI-powered due diligence research orchestrated by the lead analyst
-                  </p>
-                </div>
-                {parsed.status === "completed" && parsed.report !== null && (
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="flex items-center gap-2 text-lg">
-                        <CheckCircle2 className="size-5 text-green-600" />
-                        Research Complete
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <MarkdownContent content={parsed.report} />
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            ) : selectedSubAgent ? (
-              <div className="space-y-6">
-                <div>
-                  <h1 className="text-2xl font-bold tracking-tight">
-                    Agent Research
-                  </h1>
-                  <p className="text-muted-foreground mt-1">
-                    Specialized research agent for {project.companyName}
-                  </p>
-                </div>
+        {selectedTab === null ? (
+          <BackdropCard
+            imageAlt="Lead Analyst"
+            imageSrc={leadAgentImage}
+            rootClassName="p-6"
+            className="p-10 max-w-6xl"
+          >
+            <div className="space-y-6">
+              {/* Stats Gauges */}
+              <StatsGauges
+                stats={[
+                  {
+                    label: "Confidence",
+                    value: 87,
+                    color: "hsl(142, 76%, 36%)",
+                  },
+                  {
+                    label: "Verification",
+                    value: 92,
+                    color: "hsl(221, 83%, 53%)",
+                  },
+                  {
+                    label: "Risk Level",
+                    value: 24,
+                    color: "hsl(47, 96%, 53%)",
+                  },
+                  {
+                    label: "Data Quality",
+                    value: 78,
+                    color: "hsl(262, 83%, 58%)",
+                  },
+                ]}
+                className="bg-card/80 backdrop-blur-sm rounded-xl p-6"
+              />
 
-                <SubAgentView agent={selectedSubAgent.output} />
+              {parsed.report !== null && (
+                <div className="p-6 rounded-xl bg-card">
+                  <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <MarkdownContent content={parsed.report} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </BackdropCard>
+        ) : selectedSubAgentMessage ? (
+          <BackdropCard imageAlt="New Project" imageSrc={subImage!} rootClassName="p-6" className="p-10 max-w-4xl 2xl:max-w-6xl" imageClassName="">
+            <div className="space-y-6">
+              <div className="space-y-2 bg-card p-6 rounded-xl">
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center size-9 rounded-lg bg-muted border shadow-inner">
+                    <Icon icon={subAgentProperties!.icon} className="size-4 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-semibold tracking-tight">
+                      {subAgentProperties!.name}
+                    </h1>
+                    <p className="text-sm text-muted-foreground">
+                      {subAgentProperties!.description}
+                    </p>
+                  </div>
+                </div>
               </div>
-            ) : null}
-          </div>
-        </ScrollArea>
+
+              <SubAgentView agent={selectedSubAgentMessage.output} />
+            </div>
+          </BackdropCard>
+        ) : null}
       </SidebarInset>
     </SidebarProvider>
   );
 }
 
+type ImageTheme = Record<"light" | "dark", string>;
 
-function Icon({ icon }: { icon: AgentInput["icon"] }): React.ReactNode {
-  const Icon = icons[icon];
-  return <Icon className="size-4" />;
+const leadAgentImages: ImageTheme = {
+  light: "/images/background-orange-light.webp",
+  dark: "/images/background-orange-dark.webp",
+}
+const subAgentImages: Record<SubAgent, ImageTheme> = {
+  general: {
+    light: "/images/background-green-light.webp",
+    dark: "/images/background-green-dark.webp",
+  },
+  contact: {
+    light: "/images/background-purple-light.webp",
+    dark: "/images/background-purple-dark.webp",
+  },
 }
 
-export function TeamSwitcher() {
 
-  return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuButton
-          size="lg"
-          className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-        >
-          <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-            <GalleryVerticalEnd className="size-4" />
-          </div>
-          <div className="flex flex-col gap-0.5 leading-none">
-            <span className="font-medium">Adam AI Labs</span>
-          </div>
-          <ChevronsUpDown className="ml-auto" />
-        </SidebarMenuButton>
-      </SidebarMenuItem>
-    </SidebarMenu>
-  )
+function Icon({ icon, className, ...props }: HTMLAttributes<HTMLOrSVGElement> & { icon: AgentIcon }): React.ReactNode {
+  const IconComponent = icons[icon];
+  return <IconComponent className={className} {...props} />;
 }

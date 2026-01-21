@@ -7,11 +7,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { subAgentRegistry } from "@/lib/research/agents/sub.agents";
+import { subAgentPropertiesRegistry } from "@/lib/research/agents/agent.properties";
 
 export default function AgentsPage() {
-  const agents = Object.entries(subAgentRegistry);
+  const agents = Object.entries(subAgentPropertiesRegistry);
 
   return (
     <Layout>
