@@ -128,7 +128,6 @@ Then update your `.env.local` to point to your local instance:
 
 ```bash
 FIRECRAWL_API_URL=http://localhost:3002
-FIRECRAWL_API_KEY=your-local-key  # if configured
 ```
 
 ## Project Structure
