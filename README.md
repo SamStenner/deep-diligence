@@ -48,7 +48,7 @@ This is a monorepo managed with [pnpm](https://pnpm.io/) workspaces and [Turbore
 
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/Adam-CAD/deep-diligence.git
 cd deep-diligence
 
 # Install dependencies
