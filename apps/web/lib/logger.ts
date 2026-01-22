@@ -15,19 +15,19 @@ function formatContext(context?: LogContext): string {
 }
 
 function log(level: LogLevel, prefix: string, message: string, context?: LogContext) {
-  const contextStr = formatContext(context);
   
-  const formatted = `[${level.toUpperCase()}] [${prefix}] ${message}${contextStr}`;
+  
+  const formatted = `[${level.toUpperCase()}] [${prefix}] ${message}`;
   
   switch (level) {
     case "error":
-      console.error(formatted);
+      console.error(formatted, context);
       break;
     case "warn":
-      console.warn(formatted);
+      console.warn(formatted, context);
       break;
     default:
-      console.log(formatted);
+      console.log(formatted, context);
   }
 }
 

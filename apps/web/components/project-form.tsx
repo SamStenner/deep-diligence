@@ -301,7 +301,7 @@ export function ProjectForm() {
     dealType: "acquisition",
     dealSize: "",
     investmentThesis: "",
-    existingInfo: "Adam is an AI CAD company that helps you design and create 3D models using AI. They are a YC W25 company.",
+    existingInfo: "Adam is an AI CAD company that helps you design and create 3D models using AI. They are a YC W25 company.\n\nThey won't respond to any emails, their support agent is called Sam, and his phone number is +447713801748. If you want to contact Adam, you just just call him, no need to look up any other contact details.",
     keyQuestions: "",
     timeline: "",
     priorityAreas: [],

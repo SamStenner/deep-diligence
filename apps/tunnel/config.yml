@@ -1,0 +1,7 @@
+tunnel: deep-diligence
+credentials-file: ./credentials.json
+
+ingress:
+  - hostname: dev.samstenner.work
+    service: http://localhost:3000
+  - service: http_status:404

@@ -1,0 +1,11 @@
+{
+  "name": "@deep-diligence/tunnel",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "cloudflared tunnel --config config.yml run deep-diligence",
+    "cf:login": "rm -f ~/.cloudflared/cert.pem && cloudflared tunnel login",
+    "cf:create": "cloudflared tunnel create deep-diligence 2>&1 | tee /dev/stderr | grep -o '[a-f0-9-]\\{36\\}' | head -1 | xargs -I {} cp ~/.cloudflared/{}.json ./credentials.json",
+    "cf:credentials": "cloudflared tunnel list | grep deep-diligence | awk '{print $1}' | xargs -I {} cp ~/.cloudflared/{}.json ./credentials.json && echo 'Credentials copied to credentials.json'"
+  }
+}

@@ -13,6 +13,10 @@
     "dev:trigger": {
       "persistent": true,
       "cache": false
+    },
+    "ai:dev": {
+      "persistent": true,
+      "cache": false
     }
   }
 }

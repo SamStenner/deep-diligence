@@ -22,6 +22,13 @@
       "when": 1768968872132,
       "tag": "0002_special_nightshade",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1769044922594,
+      "tag": "0003_amazing_iron_patriot",
+      "breakpoints": true
     }
   ]
 }

@@ -1,12 +1,15 @@
 import {
+  InferUITools,
   tool,
+  UIDataTypes,
+  UIMessage,
 } from "ai";
 import { z } from "zod";
-import { subAgentRegistry, subAgentSchema, SubAgentUIMessage } from "../sub.agents";
+import { subAgentRegistry, subAgentSchema } from "./sub.agents";
 import {} from "ai";
 import { modelMessagesToUiMessage } from "@/lib/ai-utils";
 import { createLogger } from "@/lib/logger";
-import { AgentContext } from "../sub.agents";
+import { type AgentContext, SubAgentUIMessage } from "./types";
 
 const orchestratorLog = createLogger("orchestrator");
 
@@ -52,15 +55,14 @@ export const tools = {
       const results = await Promise.all(
         subAgents.map(async ({ subAgent, prompt }) => {
           orchestratorLog.info(`Spawning sub-agent: ${subAgent}`, { prompt: prompt.slice(0, 100) });
-          const { agent, disabled } = subAgentRegistry[subAgent];
-          if (disabled) return null
+          const { agent } = subAgentRegistry[subAgent];
           const output = await agent(agentContext).generate({ prompt  });
           orchestratorLog.info(`Sub-agent completed: ${subAgent}`, {
             messageCount: output.response.messages.length,
           });
           return modelMessagesToUiMessage<SubAgentUIMessage>(output.response.messages, output.response.id);
         }),
-      ).then(results => results.filter(result => result !== null));
+      );
 
       orchestratorLog.toolResult("spawnAgent", { resultCount: results.length });
       return results;
@@ -79,8 +81,13 @@ export const tools = {
   }),
 };
 
-type Tools = typeof tools;
+export type AgentTools = typeof tools;
 
+export type AgentToolName = keyof AgentTools;
+
+export type AgentUITools = InferUITools<AgentTools>;
+
+export type AgentUIMessage = UIMessage<unknown, UIDataTypes, AgentUITools>;
 
 export type ToolsContext = {
   projectId: string;

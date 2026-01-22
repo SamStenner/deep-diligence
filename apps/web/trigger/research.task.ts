@@ -1,5 +1,5 @@
 import { logger, task } from "@trigger.dev/sdk/v3";
-import { getProjectById, createProjectResearch } from "@/lib/data/db";
+import { getProjectById, createProjectResearch, updateProjectStatus } from "@/lib/data/db";
 import { modelMessagesToUiMessage } from "@/lib/ai-utils";
 import { createLogger } from "@/lib/logger";
 import {
@@ -7,20 +7,15 @@ import {
   StepResult,
   StopCondition,
   ToolLoopAgent,
-  UIMessage,
-  UIDataTypes,
-  InferUITools,
 } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
-import { tools } from "@/lib/research/agents/orchestrator";
+import { tools, type AgentTools, type AgentToolName, AgentUIMessage } from "@/lib/research/agents/orchestrator";
 
 const researchTaskLog = createLogger("research-task");
 
-type AgentTools = typeof tools;
-
 const includesTool = (
   steps: Array<StepResult<AgentTools>>,
-  tool: keyof AgentTools
+  tool: AgentToolName
 ) =>
   steps.some((step) =>
     step.staticToolCalls.some((call) => call.toolName === tool)
@@ -28,7 +23,7 @@ const includesTool = (
 
 const MAX_STEPS = process.env.NODE_ENV === "production" ? 300 : 15;
 
-const model = anthropic("claude-haiku-4-5");
+const model = anthropic("claude-sonnet-4-5");
 
 type Output = Parameters<StopCondition<AgentTools>>[number];
 
@@ -37,8 +32,6 @@ const stopWhen = [
   stepCountIs(MAX_STEPS),
 ];
 
-type AgentUITools = InferUITools<AgentTools>;
-type AgentUIMessage = UIMessage<unknown, UIDataTypes, AgentUITools>;
 
 // Schema for email reply events
 export interface EmailReplyPayload {
@@ -48,6 +41,24 @@ export interface EmailReplyPayload {
   subject: string;
   content: string;
   receivedAt: string;
+}
+
+// Schema for phone call completion events
+export interface PhoneCallPayload {
+  projectId: string;
+  conversationId: string;
+  transcript: Array<{
+    role: "agent" | "user";
+    message: string;
+    timeInCallSecs: number;
+  }>;
+  analysis: {
+    callSuccessful: string;
+    transcriptSummary: string;
+    callSummaryTitle: string;
+  };
+  callDurationSecs: number;
+  terminationReason: string;
 }
 
 /**
@@ -72,7 +83,21 @@ export const researchTask = task({
       industry: project.industry,
     });
 
-    const prompt = `The project is about the company ${project.companyName}. The company is in the industry of ${project.industry}. The company is located in ${project.headquarters}. The company has ${project.employeeCount} employees.`;
+    const prompt = `
+The project is about the company ${project.companyName}.
+The company is in the industry of ${project.industry}.
+The company is located in ${project.headquarters}.
+The company has ${project.employeeCount} employees.
+The company's website is ${project.companyWebsite}.
+The company's existing info is ${project.existingInfo}.
+The company's key questions are ${project.keyQuestions}.
+The company's timeline is ${project.timeline}.
+The company's priority areas are ${project.priorityAreas?.join(", ")}.
+
+The existing info is extremely important. If the user specifies existing info, you MUST use it or obey any specific instructions.
+`.trim();
+
+    researchTaskLog.info("Prompt", { prompt });
 
     const createAgent = () => {
       const context = { projectId };
@@ -104,6 +129,9 @@ export const researchTask = task({
 
     // Save research results
     await createProjectResearch(projectId, result);
+
+    // Mark project as completed
+    await updateProjectStatus(projectId, "completed");
 
     logger.log("Research completed and saved", { projectId });
     researchTaskLog.info("Research completed and saved", { projectId });

@@ -1,56 +1,8 @@
+import { createLogger } from "@/lib/logger";
 import { tool } from "ai";
 import z from "zod";
-import { browserUseClient } from "../clients/browser-use";
-import { createLogger } from "@/lib/logger";
-import { firecrawl, isDocument } from "../clients/firecrawl";
 
-const log = createLogger("base-tools");
-
-export const webTools = {
-  searchWeb: tool({
-    title: "Search Web",
-    description:
-      "Searches the web for information. Not a full browser experience, but provides a simpler and faster way to search the web.",
-    inputSchema: z.object({
-      query: z.string().describe("The query to search the web for."),
-      limit: z.number().optional().default(5).describe("The number of results to return. Defaults to 5."),
-    }),
-    execute: async ({ query, limit }) => {
-      log.tool("searchWeb", { query, limit });
-      const results = await firecrawl.search(query, {
-        limit,
-        sources: ["web"],
-        categories: ["research"],
-      })
-      log.toolResult("searchWeb", { results: results.web!.length });
-      return results.web
-    },
-  }),
-  browseWeb: tool({
-    title: "Browse Web",
-    description:
-      "Browses the web for information. Provides a full visual browser experience, navigating through the web and providing a full context of the page. This is useful if you need to find information on a website that requires interactivity or visual inspection.",
-    inputSchema: z.object({
-      website: z.string(),
-      prompt: z.string().describe("The task to perform on the web."),
-    }),
-    execute: async ({ website, prompt }) => {
-      log.tool("browseWeb", { website, prompt: prompt.slice(0, 100) });
-
-      const task = await browserUseClient.tasks.createTask({
-        task: prompt,
-      });
-
-      log.info("Browser task created, waiting for completion");
-      const { judgeVerdict: success, judgement, output } = await task.complete();
-
-      log.toolResult("browseWeb", { success, judgement });
-      return { success, judgement, output };
-    },
-  }),
-}
-
-export type WebTools = keyof typeof webTools;
+const log = createLogger("utility-tools");
 
 export const utilityTools = {
 
@@ -132,9 +84,3 @@ export const utilityTools = {
 
 export type UtilityTools = keyof typeof utilityTools;
 
-export const baseTools = {
-  ...webTools,
-  ...utilityTools,
-}
-
-export type BaseTools = WebTools | UtilityTools;

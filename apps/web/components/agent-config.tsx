@@ -11,11 +11,12 @@ import {
 } from "@/components/ui/collapsible";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { type AgentToolsMetadata } from "@/lib/research/agents/sub.agents";
+import { AgentToolsMetadata } from "@/lib/research/agents/types";
+import { useState } from 'react';
 
 export function AgentConfigCard({ agent }: { agent: AgentToolsMetadata }) {
-  const [isEnabled, setIsEnabled] = React.useState(true);
-  const [isOpen, setIsOpen] = React.useState(false);
+  const [isEnabled, setIsEnabled] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
 
   const AgentIcon = icons[agent.icon] ?? icons.Bot;
 

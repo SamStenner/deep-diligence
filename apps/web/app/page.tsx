@@ -13,6 +13,7 @@ import { Layout } from "@/components/layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { getProjects } from "@/lib/data/db";
+import { DeleteProjectButton } from "@/components/delete-project-button";
 
 const STATUS_CONFIG: Record<
   string,
@@ -182,7 +183,7 @@ export default async function ProjectsPage() {
                       </div>
 
                       {/* Meta */}
-                      <div className="flex items-center gap-6">
+                      <div className="flex items-center gap-4">
                         <div className="hidden sm:flex items-center gap-1.5 text-sm text-muted-foreground">
                           <Calendar className="size-3.5" />
                           <span>
@@ -199,6 +200,10 @@ export default async function ProjectsPage() {
                             <span>{project.timeline}</span>
                           </div>
                         )}
+                        <DeleteProjectButton
+                          projectId={project.id}
+                          projectName={project.companyName}
+                        />
                       </div>
                     </div>
                   </Link>

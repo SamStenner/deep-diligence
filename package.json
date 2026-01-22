@@ -2,7 +2,7 @@
   "name": "deep-diligence",
   "private": true,
   "scripts": {
-    "dev": "turbo dev dev:trigger",
+    "dev": "turbo dev dev:trigger ai:dev",
     "build": "turbo build"
   },
   "workspaces": [

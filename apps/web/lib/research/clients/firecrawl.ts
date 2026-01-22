@@ -1,9 +1,9 @@
 import Firecrawl, { type Document, type SearchResultWeb } from '@mendable/firecrawl-js';
 
 export const firecrawl = new Firecrawl({
-  apiKey: process.env.FIRECRAWL_BASE_URL,
+  apiUrl: "http://localhost:3002",
 });
 
-export const isDocument = (result: object | Document): result is Document => {
+export const isSearchResult = (result: Document | SearchResultWeb): result is SearchResultWeb => {
   return 'url' in result;
 }

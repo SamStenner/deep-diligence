@@ -1,6 +1,6 @@
 import { MessageResponse } from "./ai-elements/message";
 import { StaticToolRenderer } from "./ai-elements/static-tools";
-import { SubAgentUIMessage } from "@/lib/research/agents/sub.agents";
+import { type SubAgentUIMessage } from "@/lib/research/agents/types";
 import { isStaticToolUIPart } from "ai";
 
 export function Content({ parts }: { parts: SubAgentUIMessage["parts"] }) {

@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   Brain,
+  CheckCircle2,
   ChevronDown,
   ChevronRight,
   FileText,
@@ -13,16 +14,13 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Sidebar,
   SidebarContent,
@@ -38,23 +36,33 @@ import {
   SidebarSeparator,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import type { Project, ProjectResearch, Research } from "@/lib/data/schema";
+import type { Project, ProjectResearch } from "@/lib/data/schema";
 import { Streamdown } from "streamdown";
-import { SubAgent, type AgentInput, type SubAgentUIMessage } from "@/lib/research/agents/sub.agents";
+import { SubAgent, type SubAgentUIMessage } from "@/lib/research/agents/types";
 import { Content } from "./content";
 import { isToolUIPart } from "ai";
 import { HTMLAttributes, useEffect, useState } from 'react';
-import { AgentIcon, SubAgentPropertiesInput, subAgentPropertiesRegistry } from "@/lib/research/agents/agent.properties";
+import { AgentIcon, subAgentPropertiesRegistry } from "@/lib/research/agents/agent.properties";
 import { BackdropCard } from "./ui/backdrop-card";
 import { ThemeToggle } from "./ui/theme-toggle";
 import { useTheme } from "next-themes";
 import { StatsGauges } from "./ui/gauge-chart";
+import { AgentUIMessage } from "@/lib/research/agents/orchestrator";
 
-function parseResearch(research: Research) {
+type ProcessStep = {
+  id: string;
+  toolName: string;
+  type: "updatePlan" | "checkPlan" | "spawnAgent" | "done";
+  input: unknown;
+  output: unknown;
+  isCompleted: boolean;
+};
+
+function parseResearch(research: AgentUIMessage) {
   const results = research.parts.filter((p) => isToolUIPart(p));
   const doneResult = results.find((r) => r.type === "tool-done" && r.state === "output-available")
-  console.log("doneResult", results);
   const outputResults = results.filter((r) => r.state === "output-available");
   const latestPlan = outputResults.findLast((r) => r.type === "tool-updatePlan")?.input.plan
   const subAgents = outputResults.filter((r) => r.type === "tool-spawnAgent").flatMap((r) => {
@@ -64,10 +72,27 @@ function parseResearch(research: Research) {
       output: r.output[index],
     }))
   })
+
+  // Extract all process steps in order
+  const processSteps: ProcessStep[] = results
+    .filter((r) => ["tool-updatePlan", "tool-checkPlan", "tool-spawnAgent", "tool-done"].some(t => r.type === t))
+    .map((r) => {
+      const toolType = r.type.replace("tool-", "") as ProcessStep["type"];
+      return {
+        id: r.toolCallId,
+        toolName: r.type,
+        type: toolType,
+        input: r.input,
+        output: r.state === "output-available" ? r.output : undefined,
+        isCompleted: r.state === "output-available",
+      };
+    });
+
   return {
     plan: latestPlan,
     subAgents,
-    status: doneResult ? "completed" : "in_progress",
+    processSteps,
+    status: (doneResult ? "completed" : "in_progress") as "completed" | "in_progress",
     report: doneResult?.input.report ?? null
   };
 }
@@ -81,9 +106,115 @@ function MarkdownContent({ content }: { content: string }) {
 }
 
 function SubAgentView({ agent }: { agent: SubAgentUIMessage }) {
+  console.log("agent", agent);
   return (
     <div className="space-y-3 bg-card p-6 rounded-xl h-full">
       <Content parts={agent.parts} />
+    </div>
+  );
+}
+
+type ProcessTimelineProps = {
+  processSteps: ProcessStep[];
+};
+
+const stepConfig: Record<ProcessStep["type"], { icon: AgentIcon; label: string; getDescription: (input: unknown) => string }> = {
+  updatePlan: {
+    icon: "ClipboardList",
+    label: "Update Plan",
+    getDescription: () => "Updated the research plan",
+  },
+  checkPlan: {
+    icon: "ClipboardCheck",
+    label: "Check Plan",
+    getDescription: () => "Reviewed current plan status",
+  },
+  spawnAgent: {
+    icon: "Users",
+    label: "Spawn Agents",
+    getDescription: () => "Delegated tasks to specialist agents",
+  },
+  done: {
+    icon: "FileText",
+    label: "Generate Report",
+    getDescription: () => "Synthesized findings into final report",
+  },
+};
+
+function ProcessTimeline({ processSteps }: ProcessTimelineProps) {
+  if (processSteps.length === 0) {
+    return (
+      <div className="text-center text-muted-foreground py-4">
+        <Loader2 className="size-5 animate-spin mx-auto mb-2" />
+        <p className="text-sm">Starting research process...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-0">
+      {processSteps.map((step, index) => {
+        const config = stepConfig[step.type];
+        const isLast = index === processSteps.length - 1;
+        const spawnedAgents = step.type === "spawnAgent"
+          ? (step.input as { subAgents: Array<{ subAgent: string; prompt: string }> }).subAgents
+          : [];
+
+        return (
+          <div key={step.id} className="flex gap-4">
+            {/* Timeline line and dot */}
+            <div className="flex flex-col items-center">
+              <div className="flex items-center justify-center size-8 rounded-full bg-card border shadow-sm">
+                {step.isCompleted ? (
+                  <CheckCircle2 className="size-4 text-green-500" />
+                ) : (
+                  <Loader2 className="size-4 text-muted-foreground animate-spin" />
+                )}
+              </div>
+              {!isLast && (
+                <div className="w-px flex-1 bg-border min-h-8" />
+              )}
+            </div>
+
+            {/* Content */}
+            <div className={cn("pb-6 flex-1", isLast && "pb-0")}>
+              <div className="flex items-center gap-2 mb-1">
+                <Icon icon={config.icon} className="size-4 text-muted-foreground" />
+                <span className="font-medium text-sm">{config.label}</span>
+                {!step.isCompleted && (
+                  <span className="text-xs text-muted-foreground">In progress...</span>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {config.getDescription(step.input)}
+              </p>
+
+              {/* Spawned agents list */}
+              {step.type === "spawnAgent" && spawnedAgents.length > 0 && (
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {spawnedAgents.map((agent, agentIndex) => {
+                    const agentProps = subAgentPropertiesRegistry[agent.subAgent as keyof typeof subAgentPropertiesRegistry];
+                    return (
+                      <div
+                        key={agentIndex}
+                        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-muted/50 border text-xs"
+                      >
+                        <Icon
+                          icon={agentProps?.icon ?? "Bot"}
+                          className="size-3 text-muted-foreground shrink-0"
+                        />
+                        <span className="font-medium">
+                          {agentProps?.name ?? agent.subAgent}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -104,13 +235,15 @@ export function ProjectView({ project, research }: ProjectViewProps) {
       </div>
     );
   }
+
   const parsed = parseResearch(research.research);
   const [selectedTab, setSelectedTab] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
   const selectedSubAgentMessage = parsed.subAgents.find((a) => a.id === selectedTab);
   const subAgentProperties = selectedSubAgentMessage ? subAgentPropertiesRegistry[selectedSubAgentMessage.input.subAgent] : null;
-  const images = selectedSubAgentMessage ? subAgentImages[selectedSubAgentMessage.input.subAgent] : null;
+  const images = selectedSubAgentMessage ? (subAgentImages[selectedSubAgentMessage.input.subAgent] ?? subAgentImages.default) : null;
   const { resolvedTheme } = useTheme();
+
 
   useEffect(() => {
     setMounted(true);
@@ -291,13 +424,33 @@ export function ProjectView({ project, research }: ProjectViewProps) {
                 className="bg-card/80 backdrop-blur-sm rounded-xl p-6"
               />
 
-              {parsed.report !== null && (
-                <div className="p-6 rounded-xl bg-card">
-                  <div className="prose prose-sm max-w-none dark:prose-invert">
-                    <MarkdownContent content={parsed.report} />
+              <Tabs defaultValue="report" className="w-full">
+                <TabsList>
+                  <TabsTrigger value="report">Report</TabsTrigger>
+                  <TabsTrigger value="process">Process</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="report">
+                  {parsed.report !== null ? (
+                    <div className="p-6 rounded-xl bg-card">
+                      <div className="prose prose-sm max-w-none dark:prose-invert">
+                        <MarkdownContent content={parsed.report} />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-6 rounded-xl bg-card text-center text-muted-foreground">
+                      <Loader2 className="size-5 animate-spin mx-auto mb-2" />
+                      <p className="text-sm">Report is being generated...</p>
+                    </div>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="process">
+                  <div className="p-6 rounded-xl bg-card">
+                    <ProcessTimeline processSteps={parsed.processSteps} />
                   </div>
-                </div>
-              )}
+                </TabsContent>
+              </Tabs>
             </div>
           </BackdropCard>
         ) : selectedSubAgentMessage ? (
@@ -334,12 +487,17 @@ const leadAgentImages: ImageTheme = {
   light: "/images/background-orange-light.webp",
   dark: "/images/background-orange-dark.webp",
 }
-const subAgentImages: Record<SubAgent, ImageTheme> = {
+
+const subAgentImages: Partial<Record<SubAgent, ImageTheme>> & { default: ImageTheme } = {
   general: {
+    light: "/images/background-purple-light.webp",
+    dark: "/images/background-purple-dark.webp",
+  },
+  contact: {
     light: "/images/background-green-light.webp",
     dark: "/images/background-green-dark.webp",
   },
-  contact: {
+  default: {
     light: "/images/background-purple-light.webp",
     dark: "/images/background-purple-dark.webp",
   },

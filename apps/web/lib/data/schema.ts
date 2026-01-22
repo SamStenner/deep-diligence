@@ -1,6 +1,6 @@
-import { GenerateTextResult } from "ai";
+
 import { integer, jsonb, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { generate } from "../research";
+import { AgentUIMessage } from "../research/agents/orchestrator";
 
 export const projectStatusEnum = pgEnum("project_status", [
   "draft",
@@ -88,19 +88,18 @@ export type CreateProjectInput = Omit<
 
 export const projectResearch = pgTable("project_researches", {
   id: uuid("id").primaryKey().defaultRandom(),
-  projectId: uuid("project_id").references(() => projects.id).notNull(),
+  projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-  research: jsonb("data").$type<Research>().notNull(),
+  research: jsonb("data").$type<AgentUIMessage>().notNull(),
 });
 
 export type ProjectResearch = typeof projectResearch.$inferSelect;
 
-export type Research = Awaited<ReturnType<typeof generate>>;
 
 // Email conversation status enum
 export const emailStatusEnum = pgEnum("email_status", [
@@ -116,7 +115,7 @@ export type EmailStatus = (typeof emailStatusEnum.enumValues)[number];
 export const emailConversations = pgTable("email_conversations", {
   id: uuid("id").primaryKey().defaultRandom(),
   projectId: uuid("project_id")
-    .references(() => projects.id)
+    .references(() => projects.id, { onDelete: "cascade" })
     .notNull(),
   emailId: text("email_id"), // ID from the email provider (Resend)
   messageId: text("message_id"), // RFC 5322 Message-ID header for threading
@@ -137,3 +136,56 @@ export const emailConversations = pgTable("email_conversations", {
 });
 
 export type EmailConversation = typeof emailConversations.$inferSelect;
+
+// Phone call status enum
+export const phoneStatusEnum = pgEnum("phone_status", [
+  "pending",
+  "completed",
+  "failed",
+  "timeout",
+  "no_answer",
+]);
+
+export type PhoneStatus = (typeof phoneStatusEnum.enumValues)[number];
+
+// Transcript entry type for phone calls
+export type PhoneTranscriptEntry = {
+  role: "agent" | "user";
+  message: string;
+  timeInCallSecs: number;
+};
+
+// Analysis type for phone calls
+export type PhoneCallAnalysis = {
+  callSuccessful: string;
+  transcriptSummary: string;
+  callSummaryTitle: string;
+};
+
+// Track phone conversations for the contact agent
+export const phoneConversations = pgTable("phone_conversations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id")
+    .references(() => projects.id, { onDelete: "cascade" })
+    .notNull(),
+  conversationId: text("conversation_id").notNull(), // ElevenLabs conversation ID
+  callSid: text("call_sid"), // Twilio call SID
+  waitTokenId: text("wait_token_id"), // Trigger.dev wait token ID
+  toNumber: text("to_number").notNull(),
+  agentId: text("agent_id").notNull(),
+  status: phoneStatusEnum("status").notNull().default("pending"),
+  transcript: jsonb("transcript").$type<PhoneTranscriptEntry[]>(),
+  analysis: jsonb("analysis").$type<PhoneCallAnalysis>(),
+  callDurationSecs: integer("call_duration_secs"),
+  terminationReason: text("termination_reason"),
+  startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type PhoneConversation = typeof phoneConversations.$inferSelect;

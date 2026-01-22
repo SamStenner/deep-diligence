@@ -1,5 +1,5 @@
 import { logger, task } from "@trigger.dev/sdk/v3";
-import { contactAgent } from "@/lib/research/agents/contact";
+import { contactAgent } from "@/lib/research/agents/contact.agent";
 import { createLogger } from "@/lib/logger";
 
 const testLog = createLogger("test-contact");
