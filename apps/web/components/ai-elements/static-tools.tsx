@@ -28,7 +28,6 @@ import {
 } from "@/components/ui/collapsible";
 import { Streamdown } from "streamdown";
 import { ToolUIPart, UITools } from "ai";
-import { isSearchResult } from "@/lib/research/clients/firecrawl";
 import type { Document, SearchResultWeb } from "@mendable/firecrawl-js";
 import { SubAgentToolNames, SubAgentUITools } from "@/lib/research/agents/types/agent.types";
 
@@ -138,6 +137,10 @@ type ToolProps<T extends SubAgentToolNames> = {
   part: PickTools<T> & {
     state: "output-available"
   }
+}
+
+const isSearchResult = (result: Document | SearchResultWeb): result is SearchResultWeb => {
+  return 'url' in result;
 }
 
 type SearchWebToolProps = ToolProps<"searchWeb">
