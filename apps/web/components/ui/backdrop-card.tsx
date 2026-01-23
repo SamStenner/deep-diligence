@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 
-
 interface BackdropCardProps {
   children: React.ReactNode;
   imageSrc: string;
@@ -25,7 +24,8 @@ export function BackdropCard({
   cardClassName,
   imageClassName,
 }: BackdropCardProps) {
-  const { displayedImage, nextImage, showNext, handleTransitionEnd } = useCrossfadeImage(imageSrc);
+  const { displayedImage, nextImage, showNext, handleTransitionEnd } =
+    useCrossfadeImage(imageSrc);
   return (
     <div className={cn("relative h-full overflow-hidden", rootClassName)}>
       <ScrollArea className="h-full relative">
@@ -36,7 +36,7 @@ export function BackdropCard({
           height={1000}
           className={cn(
             "w-full absolute top-0 left-0 h-full rounded-xl object-cover",
-            imageClassName
+            imageClassName,
           )}
         />
         {nextImage && (
@@ -49,14 +49,14 @@ export function BackdropCard({
             className={cn(
               "w-full absolute top-0 left-0 h-full rounded-xl object-cover transition-opacity duration-500",
               showNext ? "opacity-100" : "opacity-0",
-              imageClassName
+              imageClassName,
             )}
           />
         )}
         <div
           className={cn(
             "grid place-items-start px-6 sm:px-10 max-w-3xl 2xl:max-w-6xl mx-auto",
-            className
+            className,
           )}
         >
           <div className="w-full">

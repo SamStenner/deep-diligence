@@ -1,22 +1,25 @@
 import { anthropic } from "@ai-sdk/anthropic";
-import { stepCountIs, ToolLoopAgent } from "ai";
+import { stepCountIs, ToolLoopAgent, ToolLoopAgentSettings, ToolSet, Output, StepResult } from 'ai';
 import { communicationTools } from "./tools/communication";
 import { webTools } from "./tools/web.tools";
-import { AgentContext } from "./types";
+import type { AgentContext } from "./types";
+import { modelMessagesToUiMessage } from "@/lib/ai-utils";
+import { SubAgent } from './utils/server';
 
 const founderTools = {
   ...webTools,
 };
 
-export const founderAgent = (context: AgentContext) => new ToolLoopAgent({
-  id: "founder",
-  instructions,
-  model: anthropic("claude-sonnet-4-5"),
-  tools: founderTools,
-  stopWhen: stepCountIs(5),
-  experimental_context: context
-});
-
+export const founderAgent = (context: AgentContext, subagentId: string) =>
+  new SubAgent({
+    id: "founder",
+    subagentId,
+    instructions,
+    model: anthropic("claude-sonnet-4-5"),
+    tools: founderTools,
+    stopWhen: stepCountIs(5),
+    experimental_context: context,
+  });
 
 const instructions = `
 You are a founder background checker. You are tasked with checking the background of the founder of the company and building a timeline of their life.

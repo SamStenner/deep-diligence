@@ -1,6 +1,14 @@
-
-import { integer, jsonb, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
-import { AgentUIMessage } from "../research/agents/orchestrator";
+import {
+  integer,
+  jsonb,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from "drizzle-orm/pg-core";
+import type { AgentUIMessage } from "../research/agents/orchestrator";
+import type { SubAgentName, SubAgentUIMessage } from "../research/agents/types";
 
 export const projectStatusEnum = pgEnum("project_status", [
   "draft",
@@ -78,7 +86,6 @@ export type UploadedDocument = {
   category: "financials" | "legal" | "technical" | "market" | "team" | "other";
 };
 
-
 export type CreateProjectInput = Omit<
   Project,
   "id" | "status" | "createdAt" | "updatedAt" | "documents"
@@ -88,18 +95,50 @@ export type CreateProjectInput = Omit<
 
 export const projectResearch = pgTable("project_researches", {
   id: uuid("id").primaryKey().defaultRandom(),
-  projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
+  projectId: uuid("project_id")
+    .references(() => projects.id, { onDelete: "cascade" })
+    .notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
-  research: jsonb("data").$type<AgentUIMessage>().notNull(),
+  research: jsonb("data").$type<AgentUIMessage>(),
 });
 
 export type ProjectResearch = typeof projectResearch.$inferSelect;
 
+export const subagentStatusEnum = pgEnum("status", ["active", "completed", "failed"]);
+
+export type SubagentStatus = (typeof subagentStatusEnum.enumValues)[number];
+
+export const subagents = pgTable("subagents", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  researchId: uuid("research_id")
+    .references(() => projectResearch.id, { onDelete: "cascade" })
+    .notNull(),
+  status: subagentStatusEnum("status").notNull().default("active"),
+  name: text("name").$type<SubAgentName>().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type Subagent = typeof subagents.$inferSelect;
+
+export const subagentMessages = pgTable("subagent_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  subagentId: uuid("subagent_id")
+    .references(() => subagents.id, { onDelete: "cascade" })
+    .notNull(),
+  message: jsonb("message").$type<SubAgentUIMessage>(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+export type SubagentMessage = typeof subagentMessages.$inferSelect;
 
 // Email conversation status enum
 export const emailStatusEnum = pgEnum("email_status", [
@@ -178,7 +217,9 @@ export const phoneConversations = pgTable("phone_conversations", {
   analysis: jsonb("analysis").$type<PhoneCallAnalysis>(),
   callDurationSecs: integer("call_duration_secs"),
   terminationReason: text("termination_reason"),
-  startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+  startedAt: timestamp("started_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
   completedAt: timestamp("completed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()

@@ -1,6 +1,7 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import type { Document, SearchResultWeb } from "@mendable/firecrawl-js";
+import type { ToolUIPart, UITools } from "ai";
 import {
   Calculator,
   Calendar,
@@ -21,15 +22,17 @@ import {
   Timer,
   XCircle,
 } from "lucide-react";
+import { Streamdown } from "streamdown";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Streamdown } from "streamdown";
-import { ToolUIPart, UITools } from "ai";
-import type { Document, SearchResultWeb } from "@mendable/firecrawl-js";
-import { SubAgentToolNames, SubAgentUITools } from "@/lib/research/agents/types/agent.types";
+import type {
+  SubAgentToolNames,
+  SubAgentUITools,
+} from "@/lib/research/agents/types/agent.types";
+import { cn } from "@/lib/utils";
 
 // ============================================================================
 // Search Result & Document Cards
@@ -37,7 +40,7 @@ import { SubAgentToolNames, SubAgentUITools } from "@/lib/research/agents/types/
 
 function getDomain(url: string): string {
   try {
-    return new URL(url).hostname.replace('www.', '');
+    return new URL(url).hostname.replace("www.", "");
   } catch {
     return url;
   }
@@ -76,7 +79,8 @@ function SearchResultCard({ result }: { result: SearchResultWeb }) {
 }
 
 function DocumentCard({ document }: { document: Document }) {
-  const title = document.metadata?.title || document.metadata?.ogTitle || "Document";
+  const title =
+    document.metadata?.title || document.metadata?.ogTitle || "Document";
   const url = document.metadata?.url;
   const preview = document.markdown?.slice(0, 200).trim();
 
@@ -130,24 +134,36 @@ function DocumentCard({ document }: { document: Document }) {
 // Type Definitions
 // ============================================================================
 
-type PickTools<T extends SubAgentToolNames> = ToolUIPart<Pick<SubAgentUITools, T>>;
+type PickTools<T extends SubAgentToolNames> = ToolUIPart<
+  Pick<SubAgentUITools, T>
+>;
 
 type ToolProps<T extends SubAgentToolNames> = {
   className?: string;
   part: PickTools<T> & {
-    state: "output-available"
-  }
-}
+    state: "output-available";
+  };
+};
 
-const isSearchResult = (result: Document | SearchResultWeb): result is SearchResultWeb => {
-  return 'url' in result;
-}
+const isSearchResult = (
+  result: Document | SearchResultWeb,
+): result is SearchResultWeb => {
+  return "url" in result;
+};
 
-type SearchWebToolProps = ToolProps<"searchWeb">
-export function SearchWebTool({ part, className, ...props }: SearchWebToolProps) {
+type SearchWebToolProps = ToolProps<"searchWeb">;
+export function SearchWebTool({
+  part,
+  className,
+  ...props
+}: SearchWebToolProps) {
   const { input, output } = part;
   return (
-    <Collapsible defaultOpen={false} className={cn("group/tool", className)} {...props}>
+    <Collapsible
+      defaultOpen={false}
+      className={cn("group/tool", className)}
+      {...props}
+    >
       <CollapsibleTrigger className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-lg border bg-card hover:bg-accent/50 transition-colors">
         <Search className="size-4 text-muted-foreground shrink-0" />
         <div className="flex-1 min-w-0">
@@ -168,7 +184,7 @@ export function SearchWebTool({ part, className, ...props }: SearchWebToolProps)
                     <SearchResultCard key={item.url} result={item} />
                   ) : (
                     <DocumentCard key={item.metadata?.url} document={item} />
-                  )
+                  ),
                 )}
               </div>
             ) : (
@@ -183,11 +199,19 @@ export function SearchWebTool({ part, className, ...props }: SearchWebToolProps)
   );
 }
 
-type ScrapeWebsitesToolProps = ToolProps<"scrapeWeb">
-export function ScrapeWebsitesTool({ part, className, ...props }: ScrapeWebsitesToolProps) {
+type ScrapeWebsitesToolProps = ToolProps<"scrapeWeb">;
+export function ScrapeWebsitesTool({
+  part,
+  className,
+  ...props
+}: ScrapeWebsitesToolProps) {
   const { input, output } = part;
   return (
-    <Collapsible defaultOpen={false} className={cn("group/tool", className)} {...props}>
+    <Collapsible
+      defaultOpen={false}
+      className={cn("group/tool", className)}
+      {...props}
+    >
       <CollapsibleTrigger className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-lg border bg-card hover:bg-accent/50 transition-colors">
         <FileText className="size-4 text-muted-foreground shrink-0" />
         <div className="flex-1 min-w-0">
@@ -206,20 +230,28 @@ export function ScrapeWebsitesTool({ part, className, ...props }: ScrapeWebsites
     </Collapsible>
   );
 }
-type BrowseWebToolProps = ToolProps<"browseWeb">
+type BrowseWebToolProps = ToolProps<"browseWeb">;
 
-export function BrowseWebTool({ part, className, ...props }: BrowseWebToolProps) {
+export function BrowseWebTool({
+  part,
+  className,
+  ...props
+}: BrowseWebToolProps) {
   const { input, output } = part;
   const domain = (() => {
     try {
-      return new URL(input.website).hostname.replace('www.', '');
+      return new URL(input.website).hostname.replace("www.", "");
     } catch {
       return input.website;
     }
   })();
 
   return (
-    <Collapsible defaultOpen={false} className={cn("group/tool", className)} {...props}>
+    <Collapsible
+      defaultOpen={false}
+      className={cn("group/tool", className)}
+      {...props}
+    >
       <CollapsibleTrigger className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-lg border bg-card hover:bg-accent/50 transition-colors">
         <Globe className="size-4 text-muted-foreground shrink-0" />
         <div className="flex-1 min-w-0">
@@ -235,7 +267,9 @@ export function BrowseWebTool({ part, className, ...props }: BrowseWebToolProps)
         <div className="px-4 py-3 ml-7 border-l border-border/50 space-y-3">
           <div className="flex items-start gap-2">
             <Search className="size-3.5 text-muted-foreground mt-0.5 shrink-0" />
-            <p className="text-sm text-muted-foreground leading-relaxed">{input.prompt}</p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              {input.prompt}
+            </p>
           </div>
           <div className="space-y-2 pt-2 border-t border-border/50">
             {output.judgement && (
@@ -243,9 +277,7 @@ export function BrowseWebTool({ part, className, ...props }: BrowseWebToolProps)
             )}
             {output.output && (
               <p className="text-muted-foreground text-xs leading-relaxed">
-                <Streamdown>
-                  {output.output}
-                </Streamdown>
+                <Streamdown>{output.output}</Streamdown>
               </p>
             )}
           </div>
@@ -255,12 +287,20 @@ export function BrowseWebTool({ part, className, ...props }: BrowseWebToolProps)
   );
 }
 
-type CalculateToolProps = ToolProps<"calculate">
+type CalculateToolProps = ToolProps<"calculate">;
 
-export function CalculateTool({ part, className, ...props }: CalculateToolProps) {
+export function CalculateTool({
+  part,
+  className,
+  ...props
+}: CalculateToolProps) {
   const { input, output } = part;
   return (
-    <Collapsible defaultOpen={false} className={cn("group/tool", className)} {...props}>
+    <Collapsible
+      defaultOpen={false}
+      className={cn("group/tool", className)}
+      {...props}
+    >
       <CollapsibleTrigger className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-lg border bg-card hover:bg-accent/50 transition-colors">
         <Calculator className="size-4 text-muted-foreground shrink-0" />
         <div className="flex-1 min-w-0">
@@ -287,18 +327,24 @@ export function CalculateTool({ part, className, ...props }: CalculateToolProps)
   );
 }
 
-type DelayToolProps = ToolProps<"delay">
+type DelayToolProps = ToolProps<"delay">;
 
 export function DelayTool({ part, className, ...props }: DelayToolProps) {
   const { input } = part;
   return (
-    <Collapsible defaultOpen={false} className={cn("group/tool", className)} {...props}>
+    <Collapsible
+      defaultOpen={false}
+      className={cn("group/tool", className)}
+      {...props}
+    >
       <CollapsibleTrigger className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-lg border bg-card hover:bg-accent/50 transition-colors">
         <Timer className="size-4 text-muted-foreground shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Delay</span>
-            <span className="text-xs text-muted-foreground">{input.seconds}s</span>
+            <span className="text-xs text-muted-foreground">
+              {input.seconds}s
+            </span>
           </div>
         </div>
         <ChevronRight className="size-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]/tool:rotate-90" />
@@ -315,19 +361,29 @@ export function DelayTool({ part, className, ...props }: DelayToolProps) {
   );
 }
 
-type GetCurrentDateTimeToolProps = ToolProps<"getCurrentDateTime">
+type GetCurrentDateTimeToolProps = ToolProps<"getCurrentDateTime">;
 
-export function GetCurrentDateTimeTool({ part, className, ...props }: GetCurrentDateTimeToolProps) {
+export function GetCurrentDateTimeTool({
+  part,
+  className,
+  ...props
+}: GetCurrentDateTimeToolProps) {
   const { output } = part;
   return (
-    <Collapsible defaultOpen={false} className={cn("group/tool", className)} {...props}>
+    <Collapsible
+      defaultOpen={false}
+      className={cn("group/tool", className)}
+      {...props}
+    >
       <CollapsibleTrigger className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-lg border bg-card hover:bg-accent/50 transition-colors">
         <Calendar className="size-4 text-muted-foreground shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Current Date & Time</span>
             {output && (
-              <span className="text-xs text-muted-foreground">{output.date}</span>
+              <span className="text-xs text-muted-foreground">
+                {output.date}
+              </span>
             )}
           </div>
         </div>
@@ -345,18 +401,28 @@ export function GetCurrentDateTimeTool({ part, className, ...props }: GetCurrent
   );
 }
 
-type SendEmailToolProps = ToolProps<"sendEmail">
+type SendEmailToolProps = ToolProps<"sendEmail">;
 
-export function SendEmailTool({ part, className, ...props }: SendEmailToolProps) {
+export function SendEmailTool({
+  part,
+  className,
+  ...props
+}: SendEmailToolProps) {
   const { input, output } = part;
   return (
-    <Collapsible defaultOpen={false} className={cn("group/tool", className)} {...props}>
+    <Collapsible
+      defaultOpen={false}
+      className={cn("group/tool", className)}
+      {...props}
+    >
       <CollapsibleTrigger className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-lg border bg-card hover:bg-accent/50 transition-colors">
         <Mail className="size-4 text-muted-foreground shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Send Email</span>
-            <span className="text-xs text-muted-foreground truncate">{input.to}</span>
+            <span className="text-xs text-muted-foreground truncate">
+              {input.to}
+            </span>
           </div>
         </div>
         <ChevronRight className="size-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]/tool:rotate-90" />
@@ -379,7 +445,9 @@ export function SendEmailTool({ part, className, ...props }: SendEmailToolProps)
               )}
             </div>
             <p className="text-sm font-medium">{input.subject}</p>
-            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">{input.body}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-3">
+              {input.body}
+            </p>
           </div>
           {/* Output */}
           <div className="pt-3 border-t border-border/50 space-y-3">
@@ -423,9 +491,13 @@ export function SendEmailTool({ part, className, ...props }: SendEmailToolProps)
   );
 }
 
-type PhoneCallToolProps = ToolProps<"phoneCall">
+type PhoneCallToolProps = ToolProps<"phoneCall">;
 
-export function PhoneCallTool({ part, className, ...props }: PhoneCallToolProps) {
+export function PhoneCallTool({
+  part,
+  className,
+  ...props
+}: PhoneCallToolProps) {
   const { input, output } = part;
 
   const formatDuration = (secs?: number) => {
@@ -437,13 +509,19 @@ export function PhoneCallTool({ part, className, ...props }: PhoneCallToolProps)
   };
 
   return (
-    <Collapsible defaultOpen={false} className={cn("group/tool", className)} {...props}>
+    <Collapsible
+      defaultOpen={false}
+      className={cn("group/tool", className)}
+      {...props}
+    >
       <CollapsibleTrigger className="flex items-center gap-3 px-4 py-3 w-full text-left rounded-lg border bg-card hover:bg-accent/50 transition-colors">
         <Phone className="size-4 text-muted-foreground shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-sm font-medium">Phone Call</span>
-            <span className="text-xs text-muted-foreground truncate">{input.to}</span>
+            <span className="text-xs text-muted-foreground truncate">
+              {input.to}
+            </span>
           </div>
         </div>
         <ChevronRight className="size-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]/tool:rotate-90" />
@@ -456,7 +534,9 @@ export function PhoneCallTool({ part, className, ...props }: PhoneCallToolProps)
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span>{input.to}</span>
             </div>
-            <p className="text-xs text-muted-foreground leading-relaxed">{input.prompt}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              {input.prompt}
+            </p>
           </div>
 
           {/* Output */}
@@ -491,13 +571,20 @@ export function PhoneCallTool({ part, className, ...props }: PhoneCallToolProps)
             {/* Transcript */}
             {output.transcript && output.transcript.length > 0 && (
               <div className="space-y-2 p-3 rounded-md bg-muted/30 border">
-                <div className="text-xs font-medium text-muted-foreground">Transcript</div>
+                <div className="text-xs font-medium text-muted-foreground">
+                  Transcript
+                </div>
                 <div className="space-y-2 text-xs">
                   {output.transcript.map((turn, i) => (
-                    <div key={i} className={cn(
-                      "flex gap-2",
-                      turn.role === "agent" ? "text-muted-foreground" : "text-foreground"
-                    )}>
+                    <div
+                      key={i}
+                      className={cn(
+                        "flex gap-2",
+                        turn.role === "agent"
+                          ? "text-muted-foreground"
+                          : "text-foreground",
+                      )}
+                    >
                       <span className="font-medium shrink-0">
                         {turn.role === "agent" ? "Agent:" : "User:"}
                       </span>
@@ -511,17 +598,24 @@ export function PhoneCallTool({ part, className, ...props }: PhoneCallToolProps)
             {/* Analysis */}
             {output.analysis && (
               <div className="space-y-2 p-3 rounded-md bg-muted/30 border">
-                <div className="text-xs font-medium text-muted-foreground">Analysis</div>
+                <div className="text-xs font-medium text-muted-foreground">
+                  Analysis
+                </div>
                 <div className="space-y-1 text-xs">
                   {output.analysis.callSummaryTitle && (
-                    <p className="font-medium text-foreground">{output.analysis.callSummaryTitle}</p>
+                    <p className="font-medium text-foreground">
+                      {output.analysis.callSummaryTitle}
+                    </p>
                   )}
                   {output.analysis.transcriptSummary && (
-                    <p className="text-muted-foreground leading-relaxed">{output.analysis.transcriptSummary}</p>
+                    <p className="text-muted-foreground leading-relaxed">
+                      {output.analysis.transcriptSummary}
+                    </p>
                   )}
                   {output.analysis.callSuccessful && (
                     <p className="text-muted-foreground">
-                      <span className="font-medium">Result:</span> {output.analysis.callSuccessful}
+                      <span className="font-medium">Result:</span>{" "}
+                      {output.analysis.callSuccessful}
                     </p>
                   )}
                 </div>
@@ -539,7 +633,7 @@ export function PhoneCallTool({ part, className, ...props }: PhoneCallToolProps)
 // ============================================================================
 
 interface StaticToolPartProps {
-  part: ToolUIPart<SubAgentUITools>
+  part: ToolUIPart<SubAgentUITools>;
 }
 
 export function StaticToolRenderer({ part }: StaticToolPartProps) {
@@ -550,17 +644,17 @@ export function StaticToolRenderer({ part }: StaticToolPartProps) {
     case "tool-scrapeWeb":
       return <ScrapeWebsitesTool part={part} />;
     case "tool-browseWeb":
-      return <BrowseWebTool part={part} />
+      return <BrowseWebTool part={part} />;
     case "tool-calculate":
-      return <CalculateTool part={part} />
+      return <CalculateTool part={part} />;
     case "tool-delay":
-      return <DelayTool part={part} />
+      return <DelayTool part={part} />;
     case "tool-getCurrentDateTime":
-      return <GetCurrentDateTimeTool part={part} />
+      return <GetCurrentDateTimeTool part={part} />;
     case "tool-sendEmail":
-      return <SendEmailTool part={part} />
+      return <SendEmailTool part={part} />;
     case "tool-phoneCall":
-      return <PhoneCallTool part={part} />
+      return <PhoneCallTool part={part} />;
     default:
       // Fallback for unknown tools
       return (

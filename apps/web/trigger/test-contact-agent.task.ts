@@ -1,10 +1,8 @@
 import { logger, task } from "@trigger.dev/sdk/v3";
-import { contactAgent } from "@/lib/research/agents/contact.agent";
 import { createLogger } from "@/lib/logger";
+import { contactAgent } from "@/lib/research/agents/contact.agent";
 
 const testLog = createLogger("test-contact");
-
-
 
 export const testContactAgentTask = task({
   id: "test-contact-agent",
@@ -21,14 +19,18 @@ export const testContactAgentTask = task({
     email?: string;
   }) => {
     logger.log("Starting contact agent test", { companyName, website, email });
-    testLog.info("Starting contact agent test", { companyName, website, email });
+    testLog.info("Starting contact agent test", {
+      companyName,
+      website,
+      email,
+    });
 
-    const prompt = `Contact the company "${companyName}" (${website}${email ? `, ${email}` : ''}) to verify they are a real company. Send them a professional email asking about their business. The project ID is ${projectId}.`
+    const prompt = `Contact the company "${companyName}" (${website}${email ? `, ${email}` : ""}) to verify they are a real company. Send them a professional email asking about their business. The project ID is ${projectId}.`;
 
     testLog.info("Running contact agent with prompt", { prompt });
 
     try {
-      const output = await contactAgent({ projectId }).generate({ prompt });
+      const output = await contactAgent({ projectId, researchId: "" }).generate({ prompt });
 
       testLog.info("Contact agent completed", {
         messageCount: output.response.messages.length,

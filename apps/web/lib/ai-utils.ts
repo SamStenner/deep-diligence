@@ -1,23 +1,25 @@
 import {
-  DynamicToolUIPart,
+  type DynamicToolUIPart,
   getToolName,
   InferUITools,
   isToolUIPart,
-  ModelMessage,
-  ToolUIPart,
+  type ModelMessage,
+  type ToolUIPart,
   UIDataTypes,
-  UITools,
+  type UIMessage,
+  type UITools,
 } from "ai";
-import { UIMessage } from "ai";
 
-export function modelMessagesToUiMessage<T extends UIMessage = UIMessage>(
+export function modelMessagesToUiMessage<T extends UIMessage = UIMessage, Metadata = unknown>(
   modelMessages: ModelMessage[],
   assistantChatMessageId: string,
+  metadata?: Metadata
 ): T {
   const uiMessage: UIMessage = {
     id: assistantChatMessageId,
     role: "assistant",
     parts: [],
+    metadata,
   };
 
   for (const modelMessage of modelMessages) {
@@ -67,7 +69,7 @@ export function modelMessagesToUiMessage<T extends UIMessage = UIMessage>(
                     ...(content.providerOptions
                       ? { callProviderMetadata: content.providerOptions }
                       : {}),
-                  }
+                  };
                   uiMessage.parts.push(toolPart);
                 }
                 break;
@@ -75,7 +77,7 @@ export function modelMessagesToUiMessage<T extends UIMessage = UIMessage>(
                 // Attach tool results to existing tool-call part in this assistant message if found
                 const toolPart = uiMessage.parts.find(
                   (part) =>
-                    (isToolUIPart(part)) &&
+                    isToolUIPart(part) &&
                     part.toolCallId === content.toolCallId,
                 ) as ToolUIPart<UITools> | DynamicToolUIPart | undefined;
 
@@ -119,8 +121,7 @@ export function modelMessagesToUiMessage<T extends UIMessage = UIMessage>(
               // Find the corresponding tool part in the assistant message
               const toolPart = uiMessage.parts.find(
                 (part) =>
-                  (isToolUIPart(part)) &&
-                  part.toolCallId === content.toolCallId,
+                  isToolUIPart(part) && part.toolCallId === content.toolCallId,
               ) as ToolUIPart<UITools> | DynamicToolUIPart | undefined;
 
               if (toolPart) {
@@ -154,5 +155,5 @@ export function modelMessagesToUiMessage<T extends UIMessage = UIMessage>(
     }
   }
 
-  return uiMessage as T
+  return uiMessage as T;
 }

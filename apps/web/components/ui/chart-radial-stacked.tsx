@@ -1,7 +1,7 @@
-"use client"
+"use client";
 
-import { TrendingUp } from "lucide-react"
-import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts"
+import { TrendingUp } from "lucide-react";
+import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 
 import {
   Card,
@@ -10,17 +10,17 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
+} from "@/components/ui/card";
 import {
+  type ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart"
+} from "@/components/ui/chart";
 
-export const description = "A radial chart with stacked sections"
+export const description = "A radial chart with stacked sections";
 
-const chartData = [{ month: "january", desktop: 1260, mobile: 570 }]
+const chartData = [{ month: "january", desktop: 1260, mobile: 570 }];
 
 const chartConfig = {
   desktop: {
@@ -31,10 +31,10 @@ const chartConfig = {
     label: "Mobile",
     color: "var(--chart-2)",
   },
-} satisfies ChartConfig
+} satisfies ChartConfig;
 
 export function ChartRadialStacked() {
-  const totalVisitors = chartData[0].desktop + chartData[0].mobile
+  const totalVisitors = chartData[0].desktop + chartData[0].mobile;
 
   return (
     <Card className="flex flex-col">
@@ -78,7 +78,7 @@ export function ChartRadialStacked() {
                           Visitors
                         </tspan>
                       </text>
-                    )
+                    );
                   }
                 }}
               />
@@ -109,5 +109,5 @@ export function ChartRadialStacked() {
         </div>
       </CardFooter>
     </Card>
-  )
+  );
 }

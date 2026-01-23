@@ -1,8 +1,8 @@
 "use client";
 
-import * as React from "react";
 import * as icons from "lucide-react";
 import { ChevronDown } from "lucide-react";
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import {
   Collapsible,
@@ -10,12 +10,11 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Switch } from "@/components/ui/switch";
+import type { AgentToolsMetadata } from "@/lib/research/agents/types";
 import { cn } from "@/lib/utils";
-import { AgentToolsMetadata } from "@/lib/research/agents/types";
-import { useState } from 'react';
 
 export function AgentConfigCard({ agent }: { agent: AgentToolsMetadata }) {
-  const [isEnabled, setIsEnabled] = useState(true);
+  const [isEnabled, setIsEnabled] = useState(!agent.disabled);
   const [isOpen, setIsOpen] = useState(false);
 
   const AgentIcon = icons[agent.icon] ?? icons.Bot;
@@ -38,26 +37,26 @@ export function AgentConfigCard({ agent }: { agent: AgentToolsMetadata }) {
       <div
         className={cn(
           "rounded-xl border overflow-hidden transition-all duration-200",
-          isEnabled ? "bg-card" : "bg-muted/30 border-border/50"
+          isEnabled ? "bg-card" : "bg-muted/30 border-border/50",
         )}
       >
         {/* Header */}
         <CollapsibleTrigger
           className={cn(
             "flex items-center gap-3 p-4 w-full text-left transition-colors",
-            isEnabled ? "hover:bg-accent/50 cursor-pointer" : "cursor-default"
+            isEnabled ? "hover:bg-accent/50 cursor-pointer" : "cursor-default",
           )}
         >
           <div
             className={cn(
               "flex size-10 shrink-0 items-center justify-center rounded-lg",
-              isEnabled ? "bg-primary/10" : "bg-muted"
+              isEnabled ? "bg-primary/10" : "bg-muted",
             )}
           >
             <AgentIcon
               className={cn(
                 "size-5",
-                isEnabled ? "text-primary" : "text-muted-foreground"
+                isEnabled ? "text-primary" : "text-muted-foreground",
               )}
             />
           </div>
@@ -67,7 +66,7 @@ export function AgentConfigCard({ agent }: { agent: AgentToolsMetadata }) {
               <span
                 className={cn(
                   "font-medium",
-                  !isEnabled && "text-muted-foreground"
+                  !isEnabled && "text-muted-foreground",
                 )}
               >
                 {agent.name}
@@ -86,7 +85,7 @@ export function AgentConfigCard({ agent }: { agent: AgentToolsMetadata }) {
             className={cn(
               "size-4 text-muted-foreground transition-transform duration-200",
               isOpen && "rotate-180",
-              !isEnabled && "opacity-50"
+              !isEnabled && "opacity-50",
             )}
           />
 

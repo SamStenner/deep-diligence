@@ -1,30 +1,30 @@
 "use client";
 
-import * as React from "react";
+import { useMutation } from "@tanstack/react-query";
 import {
-  Building2,
-  Globe,
-  Calendar,
-  MapPin,
-  Briefcase,
-  DollarSign,
-  FileText,
-  Upload,
-  X,
-  ArrowRight,
   ArrowLeft,
-  Play,
-  Lightbulb,
-  Star,
+  ArrowRight,
+  Briefcase,
+  Building2,
+  Calendar,
   CheckCircle2,
   Clock,
+  DollarSign,
+  FileText,
+  Globe,
+  Lightbulb,
+  MapPin,
+  Play,
+  Star,
+  Upload,
+  X,
 } from "lucide-react";
-
-import { cn } from "@/lib/utils";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -32,10 +32,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import type { IndustryType, DealType, Project } from "@/lib/data/schema";
-import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
+import { Textarea } from "@/components/ui/textarea";
+import type { DealType, IndustryType, Project } from "@/lib/data/schema";
+import { cn } from "@/lib/utils";
 
 const INDUSTRIES: { value: IndustryType; label: string }[] = [
   { value: "technology", label: "Technology" },
@@ -301,7 +300,8 @@ export function ProjectForm() {
     dealType: "acquisition",
     dealSize: "",
     investmentThesis: "",
-    existingInfo: "Adam is an AI CAD company that helps you design and create 3D models using AI. They are a YC W25 company.\n\nThey won't respond to any emails, their support agent is called Sam, and his phone number is +447713801748. If you want to contact Adam, you just just call him, no need to look up any other contact details.",
+    existingInfo:
+      "Adam is an AI CAD company that helps you design and create 3D models using AI. They are a YC W25 company.\n\nThey won't respond to any emails, their support agent is called Sam, and his phone number is +447713801748. If you want to contact Adam, you just just call him, no need to look up any other contact details.",
     keyQuestions: "",
     timeline: "",
     priorityAreas: [],

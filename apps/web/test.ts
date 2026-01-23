@@ -4,14 +4,12 @@ export const elevenlabs = new ElevenLabsClient({
   apiKey: process.env.ELEVENLABS_API_KEY,
 });
 
-async function executePhoneCall(
-  { to }: { to: string },
-) {
+async function executePhoneCall({ to }: { to: string }) {
   const call = await elevenlabs.conversationalAi.twilio.outboundCall({
     agentId: "agent_8301kfhhaca4ert90ghs9j0qcy7n",
     agentPhoneNumberId: "phnum_5201kfhj7swde5gvjjqasg1qeb6d",
     toNumber: to,
-  })
+  });
   return call;
 }
 

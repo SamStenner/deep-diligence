@@ -1,6 +1,6 @@
 import { logger, task } from "@trigger.dev/sdk/v3";
-import { contactAgent } from "@/lib/research/agents/contact.agent";
 import { createLogger } from "@/lib/logger";
+import { contactAgent } from "@/lib/research/agents/contact.agent";
 import { executePhoneCall } from "@/lib/research/agents/tools/communication/phone-call";
 
 const testLog = createLogger("test-contact");
@@ -19,7 +19,15 @@ export const testCall = task({
     testLog.info("Starting call test", { phoneNumber });
 
     try {
-      const output = await executePhoneCall({ to: phoneNumber, prompt: "You are an agent that just needs to confirm the name of the person on the other end of the phone call. Once they have shared their name, you should end the call.", firstMessage: "Hello, what is your name?" }, { projectId });
+      const output = await executePhoneCall(
+        {
+          to: phoneNumber,
+          prompt:
+            "You are an agent that just needs to confirm the name of the person on the other end of the phone call. Once they have shared their name, you should end the call.",
+          firstMessage: "Hello, what is your name?",
+        },
+        projectId,
+      );
 
       testLog.info("Call completed", { output });
       logger.log("Call completed", { output });

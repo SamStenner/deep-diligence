@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
 import { wait } from "@trigger.dev/sdk/v3";
+import { eq } from "drizzle-orm";
+import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { db } from "@/lib/data/client";
 import { emailConversations } from "@/lib/data/schema";
-import { eq } from "drizzle-orm";
 import type { EmailReplyPayload } from "@/trigger/research.task";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
@@ -75,9 +75,9 @@ export async function POST(request: Request) {
     }
 
     const incomingEmailId = payload.data.email_id;
-    
-    console.log("Received inbound email webhook", { 
-      incomingEmailId, 
+
+    console.log("Received inbound email webhook", {
+      incomingEmailId,
       subject: payload.data.subject,
       from: payload.data.from,
       to: payload.data.to,
@@ -85,14 +85,14 @@ export async function POST(request: Request) {
 
     // Extract conversation ID from plus-addressed "to" field
     const conversationId = extractConversationId(payload.data.to);
-    
+
     console.log("Extracted conversation ID:", conversationId);
 
     if (!conversationId) {
       console.warn("No conversation ID found in to address:", payload.data.to);
       return NextResponse.json(
         { error: "Email is not a reply to a tracked conversation" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -106,14 +106,14 @@ export async function POST(request: Request) {
       .where(eq(emailConversations.messageId, conversationId));
 
     const pendingConversation = conversations.find(
-      (c) => c.status === "pending"
+      (c) => c.status === "pending",
     );
 
     if (!pendingConversation) {
       console.warn("No pending conversation found for ID:", conversationId);
       return NextResponse.json(
         { error: "No pending conversation found for this reply" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -130,10 +130,13 @@ export async function POST(request: Request) {
       .where(eq(emailConversations.id, pendingConversation.id));
 
     if (!pendingConversation.waitTokenId) {
-      console.warn("No wait token found for conversation:", pendingConversation.id);
+      console.warn(
+        "No wait token found for conversation:",
+        pendingConversation.id,
+      );
       return NextResponse.json(
         { error: "No wait token found for this conversation" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -150,7 +153,7 @@ export async function POST(request: Request) {
     // Complete the waitpoint token to resume the task
     await wait.completeToken<EmailReplyPayload>(
       pendingConversation.waitTokenId,
-      replyPayload
+      replyPayload,
     );
 
     console.log("Email reply processed for project:", projectId);
@@ -159,7 +162,7 @@ export async function POST(request: Request) {
     console.error("Error processing email webhook:", error);
     return NextResponse.json(
       { error: "Failed to process webhook" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

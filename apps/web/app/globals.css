@@ -7,7 +7,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans, "Source Sans 3"), -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans:
+    var(--font-sans, "Source Sans 3"), -apple-system, BlinkMacSystemFont,
+    sans-serif;
   --font-serif: var(--font-serif, Lora), Georgia, serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
@@ -200,7 +202,7 @@
   a {
     @apply cursor-pointer;
   }
-  
+
   /* Use serif font for prose/document content */
   .prose {
     font-family: var(--font-serif);

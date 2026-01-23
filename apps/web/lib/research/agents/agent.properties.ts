@@ -1,4 +1,4 @@
-import type { icons } from 'lucide-react';
+import type { icons } from "lucide-react";
 
 export type AgentIcon = keyof typeof icons;
 
@@ -6,29 +6,32 @@ export type SubAgentProperties = {
   name: string;
   description: string;
   icon: AgentIcon;
+  disabled?: boolean;
 };
 
 const defineAgentProperties = <T extends SubAgentProperties>(agent: T) => agent;
 
 export const subAgentPropertiesRegistry = {
   general: defineAgentProperties({
-    name: 'General Analyst',
-    description: 'For general-purpose research and information gathering',
-    icon: 'Bot',
+    name: "General Analyst",
+    description: "For general-purpose research and information gathering",
+    icon: "Bot",
   }),
   contact: defineAgentProperties({
-    name: 'Contact Analyst',
-    description: 'For contacting the company to check if they are real',
-    icon: 'User',
+    name: "Contact Analyst",
+    description: "For contacting the company to check if they are real",
+    icon: "Phone",
+    disabled: true
   }),
   corporate: defineAgentProperties({
-    name: 'Corporate Analyst',
-    description: 'For analyzing the corporate structure of the company',
-    icon: 'Building',
+    name: "Corporate Analyst",
+    description: "For analyzing the corporate structure of the company",
+    icon: "Building",
+    disabled: true
   }),
   founder: defineAgentProperties({
-    name: 'Founder Analyst',
-    description: 'For analyzing the background of the founder of the company',
-    icon: 'User',
+    name: "Founder Analyst",
+    description: "For analyzing the background of the founder of the company",
+    icon: "User",
   }),
-}
+};

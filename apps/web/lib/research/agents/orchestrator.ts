@@ -1,15 +1,11 @@
-import {
-  InferUITools,
-  tool,
-  UIDataTypes,
-  UIMessage,
-} from "ai";
+import { type InferUITools, tool, type UIDataTypes, type UIMessage } from "ai";
 import { z } from "zod";
-import { subAgentRegistry, subAgentSchema } from "./sub.agents";
-import {} from "ai";
 import { modelMessagesToUiMessage } from "@/lib/ai-utils";
+import { createSubagent, updateSubagent } from "@/lib/data/db";
 import { createLogger } from "@/lib/logger";
-import { type AgentContext, SubAgentUIMessage } from "./types";
+import { subAgentRegistry } from "./sub.agents";
+import type { AgentContext, SubAgentUIMessage } from "./types";
+import { subAgentSchema } from "./utils/server";
 
 const orchestratorLog = createLogger("orchestrator");
 
@@ -37,14 +33,18 @@ export const tools = {
     },
   }),
   spawnAgent: tool({
-    description: "Spawn a new agent to perform a task. You can spawn up to 3 agents at a time.",
+    description:
+      "Spawn a new agent to perform a task. You can spawn up to 3 agents at a time.",
     inputSchema: z.object({
-      subAgents: z.array(
-        z.object({
-          subAgent: subAgentSchema,
-          prompt: z.string(),
-        }),
-      ).min(1).max(3),
+      subAgents: z
+        .array(
+          z.object({
+            subAgent: subAgentSchema,
+            prompt: z.string(),
+          }),
+        )
+        .min(1)
+        .max(3),
     }),
     execute: async ({ subAgents }, { experimental_context: context }) => {
       orchestratorLog.tool("spawnAgent", {
@@ -52,15 +52,18 @@ export const tools = {
         agents: subAgents.map((a) => a.subAgent),
       });
       const agentContext = context as AgentContext;
+      const { researchId } = agentContext;
       const results = await Promise.all(
         subAgents.map(async ({ subAgent, prompt }) => {
-          orchestratorLog.info(`Spawning sub-agent: ${subAgent}`, { prompt: prompt.slice(0, 100) });
-          const { agent } = subAgentRegistry[subAgent];
-          const output = await agent(agentContext).generate({ prompt  });
-          orchestratorLog.info(`Sub-agent completed: ${subAgent}`, {
-            messageCount: output.response.messages.length,
+          orchestratorLog.info(`Spawning sub-agent: ${subAgent}`, {
+            prompt: prompt.slice(0, 100),
           });
-          return modelMessagesToUiMessage<SubAgentUIMessage>(output.response.messages, output.response.id);
+          const { agent } = subAgentRegistry[subAgent];
+          const subagent = await createSubagent(researchId, subAgent);
+          const output = await agent(agentContext, subagent.id).generate({ prompt });
+          orchestratorLog.info(`Sub-agent completed: ${subAgent}`, { messageCount: output.response.messages.length });
+          await updateSubagent(subagent.id, "completed");
+          return output
         }),
       );
 
@@ -72,7 +75,12 @@ export const tools = {
     description:
       "Mark a task as done. This can ONLY be called if the plan is completed and all tasks have been marked as completed in the plan.",
     inputSchema: z.object({
-      report: z.string().optional().describe("The report of the task. This is a markdown file that will use to write your report. This should be a comprehensive report based on the findings of the sub-agents."),
+      report: z
+        .string()
+        .optional()
+        .describe(
+          "The report of the task. This is a markdown file that will use to write your report. This should be a comprehensive report based on the findings of the sub-agents.",
+        ),
     }),
     execute: async ({ report }) => {
       orchestratorLog.tool("done", { hasReport: !!report });

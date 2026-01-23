@@ -2,22 +2,24 @@ import { anthropic } from "@ai-sdk/anthropic";
 import { stepCountIs, ToolLoopAgent } from "ai";
 import { communicationTools } from "./tools/communication";
 import { webTools } from "./tools/web.tools";
-import { AgentContext } from "./types";
+import type { AgentContext } from "./types";
+import { SubAgent } from "./utils/server";
 
 const corporateTools = {
   ...webTools,
   ...communicationTools,
 };
 
-export const corporateAgent = (context: AgentContext) => new ToolLoopAgent({
-  id: "corporate",
-  instructions,
-  model: anthropic("claude-sonnet-4-5"),
-  tools: corporateTools,
-  stopWhen: stepCountIs(5),
-  experimental_context: context
-});
-
+export const corporateAgent = (context: AgentContext, subagentId: string) =>
+  new SubAgent({
+    id: "corporate",
+    subagentId,
+    instructions,
+    model: anthropic("claude-sonnet-4-5"),
+    tools: corporateTools,
+    stopWhen: stepCountIs(5),
+    experimental_context: context,
+  });
 
 const instructions = `
 You are a corporate structure analyst. You are tasked with analyzing the corporate structure of the company. 

@@ -1,7 +1,7 @@
+import { isStaticToolUIPart } from "ai";
+import type { SubAgentUIMessage } from "@/lib/research/agents/types";
 import { MessageResponse } from "./ai-elements/message";
 import { StaticToolRenderer } from "./ai-elements/static-tools";
-import { type SubAgentUIMessage } from "@/lib/research/agents/types";
-import { isStaticToolUIPart } from "ai";
 
 export function Content({ parts }: { parts: SubAgentUIMessage["parts"] }) {
   return (
@@ -10,7 +10,10 @@ export function Content({ parts }: { parts: SubAgentUIMessage["parts"] }) {
         switch (part.type) {
           case "text":
             return (
-              <div key={index} className="text-sm text-foreground leading-relaxed">
+              <div
+                key={index}
+                className="text-sm text-foreground leading-relaxed"
+              >
                 <MessageResponse>{part.text}</MessageResponse>
               </div>
             );
@@ -19,8 +22,13 @@ export function Content({ parts }: { parts: SubAgentUIMessage["parts"] }) {
               return <StaticToolRenderer key={index} part={part} />;
             }
             return (
-              <div key={index} className="rounded-lg border bg-muted/30 p-3 text-xs font-mono">
-                <pre className="overflow-auto">{JSON.stringify(part, null, 2)}</pre>
+              <div
+                key={index}
+                className="rounded-lg border bg-muted/30 p-3 text-xs font-mono"
+              >
+                <pre className="overflow-auto">
+                  {JSON.stringify(part, null, 2)}
+                </pre>
               </div>
             );
         }

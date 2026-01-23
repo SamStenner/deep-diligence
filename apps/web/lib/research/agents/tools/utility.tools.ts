@@ -1,11 +1,10 @@
-import { createLogger } from "@/lib/logger";
 import { tool } from "ai";
 import z from "zod";
+import { createLogger } from "@/lib/logger";
 
 const log = createLogger("utility-tools");
 
 export const utilityTools = {
-
   getCurrentDateTime: tool({
     title: "Get Date and Time",
     description:
@@ -39,7 +38,9 @@ export const utilityTools = {
     inputSchema: z.object({
       expression: z
         .string()
-        .describe("A mathematical expression to evaluate (e.g., '(100 - 80) / 80 * 100')"),
+        .describe(
+          "A mathematical expression to evaluate (e.g., '(100 - 80) / 80 * 100')",
+        ),
     }),
     execute: async ({ expression }) => {
       log.tool("calculate", { expression });
@@ -83,4 +84,3 @@ export const utilityTools = {
 };
 
 export type UtilityTools = keyof typeof utilityTools;
-

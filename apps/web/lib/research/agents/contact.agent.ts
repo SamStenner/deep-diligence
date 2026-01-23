@@ -1,24 +1,26 @@
 import { anthropic } from "@ai-sdk/anthropic";
 import { stepCountIs, ToolLoopAgent } from "ai";
-import {  } from "./sub.agents";
+import {} from "./sub.agents";
 import { communicationTools } from "./tools/communication";
 import { webTools } from "./tools/web.tools";
-import { AgentContext } from "./types";
+import type { AgentContext } from "./types";
+import { SubAgent } from "./utils/server";
 
 const contactTools = {
   ...webTools,
   ...communicationTools,
 };
 
-export const contactAgent = (context: AgentContext) => new ToolLoopAgent({
-  id: "contact",
-  instructions,
-  model: anthropic("claude-sonnet-4-5"),
-  tools: contactTools,
-  stopWhen: stepCountIs(5),
-  experimental_context: context
-});
-
+export const contactAgent = (context: AgentContext, subagentId: string) =>
+  new SubAgent({
+    id: "contact",
+    subagentId,
+    instructions,
+    model: anthropic("claude-sonnet-4-5"),
+    tools: contactTools,
+    stopWhen: stepCountIs(5),
+    experimental_context: context,
+  });
 
 const instructions = `
 You are a contact analyst. You are tasked with contacting the company to check if they are real. 

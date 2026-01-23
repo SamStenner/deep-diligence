@@ -1,6 +1,6 @@
-import { createLogger } from "@/lib/logger";
-import { PhoneCallPayload } from "@/trigger/research.task";
 import { wait } from "@trigger.dev/sdk";
+import { createLogger } from "@/lib/logger";
+import type { PhoneCallPayload } from "@/trigger/research.task";
 
 const phoneLog = createLogger("phone");
 
@@ -11,7 +11,7 @@ const phoneLog = createLogger("phone");
  */
 export async function createPhoneWaitToken(
   conversationId: string,
-  timeoutMinutes: number = 10
+  timeoutMinutes: number = 10,
 ): Promise<string> {
   const token = await wait.createToken({
     timeout: `${timeoutMinutes}m`,
@@ -20,7 +20,10 @@ export async function createPhoneWaitToken(
     idempotencyKeyTTL: `${timeoutMinutes + 5}m`,
   });
 
-  phoneLog.info("Created phone wait token", { conversationId, tokenId: token.id });
+  phoneLog.info("Created phone wait token", {
+    conversationId,
+    tokenId: token.id,
+  });
   return token.id;
 }
 
@@ -29,7 +32,7 @@ export async function createPhoneWaitToken(
  * The token should have been created when the call was initiated.
  */
 export async function waitForPhoneCallToken(
-  tokenId: string
+  tokenId: string,
 ): Promise<PhoneCallPayload | null> {
   phoneLog.info("Waiting for phone call completion", { tokenId });
 

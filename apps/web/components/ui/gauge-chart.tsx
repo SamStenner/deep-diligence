@@ -1,16 +1,16 @@
-"use client"
+"use client";
 
-import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts"
+import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 
-import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
-import { cn } from "@/lib/utils"
+import { type ChartConfig, ChartContainer } from "@/components/ui/chart";
+import { cn } from "@/lib/utils";
 
 interface GaugeChartProps {
-  value: number
-  maxValue?: number
-  label: string
-  color?: string
-  className?: string
+  value: number;
+  maxValue?: number;
+  label: string;
+  color?: string;
+  className?: string;
 }
 
 export function GaugeChart({
@@ -20,8 +20,8 @@ export function GaugeChart({
   color = "var(--chart-1)",
   className,
 }: GaugeChartProps) {
-  const remaining = maxValue - value
-  const chartData = [{ value, remaining }]
+  const remaining = maxValue - value;
+  const chartData = [{ value, remaining }];
 
   const chartConfig = {
     value: {
@@ -32,7 +32,7 @@ export function GaugeChart({
       label: "Remaining",
       color: "var(--muted)",
     },
-  } satisfies ChartConfig
+  } satisfies ChartConfig;
 
   return (
     <div className={cn("flex flex-col items-center", className)}>
@@ -61,7 +61,9 @@ export function GaugeChart({
                         >
                           {value}
                           {maxValue === 100 && (
-                            <tspan className="text-xs font-normal text-muted-foreground">%</tspan>
+                            <tspan className="text-xs font-normal text-muted-foreground">
+                              %
+                            </tspan>
                           )}
                         </tspan>
                         <tspan
@@ -72,7 +74,7 @@ export function GaugeChart({
                           {label}
                         </tspan>
                       </text>
-                    )
+                    );
                   }
                 }}
               />
@@ -95,18 +97,18 @@ export function GaugeChart({
         </ChartContainer>
       </div>
     </div>
-  )
+  );
 }
 
 interface StatsGaugesProps {
   stats: {
-    label: string
-    value: number
-    maxValue?: number
-    sublabel?: string
-    color?: string
-  }[]
-  className?: string
+    label: string;
+    value: number;
+    maxValue?: number;
+    sublabel?: string;
+    color?: string;
+  }[];
+  className?: string;
 }
 
 export function StatsGauges({ stats, className }: StatsGaugesProps) {
@@ -122,5 +124,5 @@ export function StatsGauges({ stats, className }: StatsGaugesProps) {
         />
       ))}
     </div>
-  )
+  );
 }

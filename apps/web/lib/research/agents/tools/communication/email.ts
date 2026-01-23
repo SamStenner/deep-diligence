@@ -1,6 +1,6 @@
-import { createLogger } from "@/lib/logger";
-import { EmailReplyPayload } from "@/trigger/research.task";
 import { wait } from "@trigger.dev/sdk";
+import { createLogger } from "@/lib/logger";
+import type { EmailReplyPayload } from "@/trigger/research.task";
 
 const emailLog = createLogger("email");
 /**
@@ -10,7 +10,7 @@ const emailLog = createLogger("email");
  */
 export async function createEmailWaitToken(
   emailId: string,
-  timeoutDays: number = 7
+  timeoutDays: number = 7,
 ): Promise<string> {
   const token = await wait.createToken({
     timeout: `${timeoutDays}d`,
@@ -28,7 +28,7 @@ export async function createEmailWaitToken(
  * The token should have been created when the email was sent.
  */
 export async function waitForEmailReplyToken(
-  tokenId: string
+  tokenId: string,
 ): Promise<EmailReplyPayload | null> {
   emailLog.info("Waiting for email reply", { tokenId });
 

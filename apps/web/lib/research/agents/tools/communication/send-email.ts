@@ -2,12 +2,12 @@ import { eq } from "drizzle-orm";
 import { Resend } from "resend";
 import { db } from "@/lib/data/client";
 import { emailConversations } from "@/lib/data/schema";
+import { createLogger } from "@/lib/logger";
 import {
   createEmailWaitToken,
   waitForEmailReplyToken,
 } from "@/lib/research/agents/tools/communication/email";
-import { createLogger } from "@/lib/logger";
-import { AgentContext } from "../../types";
+import type { AgentContext } from "../../types";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const EMAIL_DOMAIN = process.env.EMAIL_DOMAIN || "notifications.adam.new";
@@ -24,9 +24,8 @@ interface SendEmailInput {
 
 export async function executeSendEmail(
   { to, subject, body, timeoutDays }: SendEmailInput,
-  context: AgentContext
+  projectId: string,
 ) {
-  const { projectId } = context;
   contactLog.tool("sendEmail", { to, subject, projectId, timeoutDays });
 
   try {
@@ -35,7 +34,11 @@ export async function executeSendEmail(
     const conversationId = `${projectId}-${Date.now()}`;
     const replyToAddress = `reply+${conversationId}@${EMAIL_DOMAIN}`;
 
-    contactLog.info("Sending email via Resend", { to, subject, replyTo: replyToAddress });
+    contactLog.info("Sending email via Resend", {
+      to,
+      subject,
+      replyTo: replyToAddress,
+    });
 
     // Send the email via Resend with plus-addressed reply-to
     const { data, error } = await resend.emails.send({
@@ -84,7 +87,9 @@ export async function executeSendEmail(
       status: "pending",
       sentAt: new Date(),
     });
-    contactLog.info("Email conversation recorded in database", { conversationId });
+    contactLog.info("Email conversation recorded in database", {
+      conversationId,
+    });
 
     // Now wait for the reply
     contactLog.info("Waiting for email reply (this may take days)", {

@@ -1,6 +1,11 @@
-import { getProjectById, getProjectResearchById } from "@/lib/data/db";
-import { ProjectView } from "@/components/project-view";
 import { notFound } from "next/navigation";
+import { ProjectViewClient } from "@/components/project-view-client";
+import {
+  getProjectById,
+  getProjectResearchById,
+  getSubagentMessagesById,
+  getSubagentsById,
+} from "@/lib/data/db";
 
 export default async function ProjectPage({
   params,
@@ -10,12 +15,29 @@ export default async function ProjectPage({
   const { id } = await params;
   const project = await getProjectById(id);
   if (!project) {
-    return <div>Project not found</div>;
+    return notFound()
   }
-  const research = await getProjectResearchById(id) ?? null
-  return (
-    <div className="h-screen w-full">
-      <ProjectView project={project} research={research} />
-    </div>
-  );
+
+  switch (project.status) {
+    case "draft":
+      return <div>Project is still in draft</div>;
+    case "in_progress":
+    case "completed": {
+      const research = await getProjectResearchById(id);
+      const subagents = await getSubagentsById(research.id);
+      return (
+        <div className="h-screen w-full">
+          <ProjectViewClient
+            project={project}
+            initialData={{
+              research: research.research,
+              subagents,
+            }}
+          />
+        </div>
+      );
+    }
+    default:
+      return notFound();
+  }
 }

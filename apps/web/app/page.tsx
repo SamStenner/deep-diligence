@@ -1,19 +1,19 @@
-import Link from "next/link";
 import {
-  Plus,
-  Building2,
-  Calendar,
   Bot,
   Briefcase,
-  TrendingUp,
+  Building2,
+  Calendar,
   Clock,
   FolderOpen,
+  Plus,
+  TrendingUp,
 } from "lucide-react";
-import { Layout } from "@/components/layout";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { getProjects } from "@/lib/data/db";
+import Link from "next/link";
 import { DeleteProjectButton } from "@/components/delete-project-button";
+import { Layout } from "@/components/layout";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { getProjects } from "@/lib/data/db";
 
 const STATUS_CONFIG: Record<
   string,

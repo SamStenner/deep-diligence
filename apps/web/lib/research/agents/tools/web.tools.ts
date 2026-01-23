@@ -1,7 +1,7 @@
-import { createLogger } from "@/lib/logger";
 import { tool } from "ai";
 import z from "zod";
-import { firecrawl, browserUse } from "@/lib/research/clients";
+import { createLogger } from "@/lib/logger";
+import { browserUse, firecrawl } from "@/lib/research/clients";
 
 const log = createLogger("web-tools");
 
@@ -12,15 +12,19 @@ export const webTools = {
       "Searches the web for information. Uses DuckDuckGo to search the web and returns search results. Use with the scrapeWebsites tool to get the website's content.",
     inputSchema: z.object({
       query: z.string().describe("The query to search the web for."),
-      limit: z.number().optional().default(3).describe("The number of results to return. Defaults to 3."),
+      limit: z
+        .number()
+        .optional()
+        .default(3)
+        .describe("The number of results to return. Defaults to 3."),
     }),
     execute: async ({ query, limit }) => {
       log.tool("searchWeb", { query, limit });
       const response = await firecrawl.search(query, {
         limit,
-      })
+      });
       log.toolResult("searchWeb", { response: response.web?.length ?? 0 });
-      return response.web
+      return response.web;
     },
   }),
   scrapeWeb: tool({
@@ -57,12 +61,16 @@ export const webTools = {
       });
 
       log.info("Browser task created, waiting for completion");
-      const { judgeVerdict: success, judgement, output } = await task.complete();
+      const {
+        judgeVerdict: success,
+        judgement,
+        output,
+      } = await task.complete();
 
       log.toolResult("browseWeb", { success, judgement });
       return { success, judgement, output };
     },
   }),
-}
+};
 
 export type WebTools = keyof typeof webTools;

@@ -1,12 +1,19 @@
-import type { InferUITools, ToolLoopAgent, ToolSet, UIDataTypes, UIMessage } from 'ai';
-import type { SubAgentProperties } from '../agent.properties';
-import type { subAgentRegistry } from '../sub.agents';
-import type { Simplify, UnionToIntersection } from './utility.types';
+import type {
+  InferUITools,
+  ToolLoopAgent,
+  ToolSet,
+  UIDataTypes,
+  UIMessage,
+} from "ai";
+import { Subagent } from "@/lib/data/schema";
+import type { SubAgentProperties } from "../agent.properties";
+import type { subAgentRegistry } from "../sub.agents";
+import type { Simplify, UnionToIntersection } from "./utility.types";
 
 /**
  * Context passed to all sub-agents
  */
-export type AgentContext = { projectId: string };
+export type AgentContext = { projectId: string; researchId: string };
 
 /**
  * Input type for defining a sub-agent.
@@ -14,17 +21,15 @@ export type AgentContext = { projectId: string };
  */
 export type AgentInput<TOOLS extends ToolSet = {}> = {
   properties: SubAgentProperties;
-  agent: (context: AgentContext) => ToolLoopAgent<never, TOOLS>;
-  disabled?: boolean;
+  agent: (context: AgentContext, subagentId: string) => ToolLoopAgent<never, TOOLS>;
 };
 
 /**
  * Full agent entry type with all properties spread.
  * This is what gets stored in the registry.
  */
-export type AgentEntry<TOOLS extends ToolSet = {}, D extends boolean = false> = SubAgentProperties & {
-  agent: (context: AgentContext) => ToolLoopAgent<never, TOOLS>;
-  disabled: D;
+export type AgentEntry<TOOLS extends ToolSet = {}> = SubAgentProperties & {
+  agent: (context: AgentContext, subagentId: string) => ToolLoopAgent<never, TOOLS>;
 };
 
 /**
@@ -32,35 +37,30 @@ export type AgentEntry<TOOLS extends ToolSet = {}, D extends boolean = false> = 
  */
 export type SubAgentTools = Simplify<
   UnionToIntersection<
-    ReturnType<(typeof subAgentRegistry)[keyof typeof subAgentRegistry]['agent']>['tools']
+    ReturnType<
+      (typeof subAgentRegistry)[keyof typeof subAgentRegistry]["agent"]
+    >["tools"]
   >
 >;
 
 export type SubAgentUITools = InferUITools<SubAgentTools>;
 
-let a: SubAgentUITools
-
 export type SubAgentToolNames = keyof SubAgentTools;
 
-export type SubAgentUIOutput = SubAgentUITools[keyof SubAgentUITools]['output'];
+export type SubAgentUIOutput = SubAgentUITools[keyof SubAgentUITools]["output"];
 
-export type SubAgentUIMessage = UIMessage<unknown, UIDataTypes, SubAgentUITools>;
+export type SubAgentMetadata = { name: SubAgentName };
 
-/**
- * Extracts only the keys where disabled is not true
- */
-type EnabledSubAgentKeys = {
-  [K in keyof typeof subAgentRegistry]: (typeof subAgentRegistry)[K]['disabled'] extends true
-    ? never
-    : K;
-}[keyof typeof subAgentRegistry];
-
-export type SubAgent = EnabledSubAgentKeys;
+export type SubAgentUIMessage = UIMessage<
+  SubAgentMetadata,
+  UIDataTypes,
+  SubAgentUITools
+> & { metadata: SubAgentMetadata };
 
 /**
  * Use this when you need all agent keys regardless of disabled status
  */
-export type AllSubAgent = keyof typeof subAgentRegistry;
+export type SubAgentName = keyof typeof subAgentRegistry;
 
 /**
  * Tool metadata type for UI display
@@ -71,9 +71,10 @@ export type ToolMetadata = {
 };
 
 export type AgentToolsMetadata = {
-  id: SubAgent;
+  id: SubAgentName;
   name: string;
   description: string;
-  icon: SubAgentProperties['icon'];
+  icon: SubAgentProperties["icon"];
   tools: ToolMetadata[];
+  disabled: boolean
 };

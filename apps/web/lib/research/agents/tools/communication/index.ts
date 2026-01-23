@@ -1,8 +1,8 @@
 import { dynamicTool, tool } from "ai";
 import { z } from "zod";
+import type { AgentContext } from "../../types";
 import { executePhoneCall } from "./phone-call";
 import { executeSendEmail } from "./send-email";
-import { AgentContext } from "../../types";
 
 export const communicationTools = {
   sendEmail: tool({
@@ -19,18 +19,39 @@ export const communicationTools = {
         .default(7)
         .describe("How many days to wait for a reply (default: 7)"),
     }),
-    execute: async (input, { experimental_context: context }) => executeSendEmail(input, context as AgentContext),
+    execute: async (input, { experimental_context: context }) => {
+      const { projectId } = context as AgentContext;
+      return executeSendEmail(input, projectId);
+    },
   }),
   phoneCall: tool({
     title: "Phone Call",
     description: "Make a phone call to the recipient.",
     inputSchema: z.object({
-      to: z.string().describe("The phone number to call. MUST be a US or UK phone number (+1 or +44)."),
-      prompt: z.string().describe("The prompt to use when calling the recipient. This will be used to determine if the recipient is real."),
-      firstMessage: z.string().describe("The first message to send to the recipient."),
-      language: z.string().describe("The language to use when calling the recipient if not English (default: English)").optional(),
+      to: z
+        .string()
+        .describe(
+          "The phone number to call. MUST be a US or UK phone number (+1 or +44).",
+        ),
+      prompt: z
+        .string()
+        .describe(
+          "The prompt to use when calling the recipient. This will be used to determine if the recipient is real.",
+        ),
+      firstMessage: z
+        .string()
+        .describe("The first message to send to the recipient."),
+      language: z
+        .string()
+        .describe(
+          "The language to use when calling the recipient if not English (default: English)",
+        )
+        .optional(),
     }),
-    execute: async (input, { experimental_context: context }) => executePhoneCall(input, context as AgentContext),
+    execute: async (input, { experimental_context: context }) => {
+        const { projectId } = context as AgentContext;
+        return executePhoneCall(input, projectId);
+      },
   }),
 };
 

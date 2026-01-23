@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1768941256381,
-      "tag": "0000_shocking_juggernaut",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1768962451252,
-      "tag": "0001_spooky_malice",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1768968872132,
-      "tag": "0002_special_nightshade",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1769044922594,
-      "tag": "0003_amazing_iron_patriot",
+      "when": 1769138163219,
+      "tag": "0000_serious_carlie_cooper",
       "breakpoints": true
     }
   ]

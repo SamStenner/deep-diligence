@@ -1,18 +1,21 @@
 import { eq } from "drizzle-orm";
-import { createLogger } from "@/lib/logger";
 import { db } from "@/lib/data/client";
 import { phoneConversations } from "@/lib/data/schema";
-import { elevenlabs } from "@/lib/research/clients/eleven-labs";
+import { createLogger } from "@/lib/logger";
 import {
   createPhoneWaitToken,
   waitForPhoneCallToken,
 } from "@/lib/research/agents/tools/communication/phone";
-import { AgentContext } from "../../types";
+import { elevenlabs } from "@/lib/research/clients/eleven-labs";
+import type { AgentContext } from "../../types";
 
 const contactLog = createLogger("contact");
 
-const AGENT_ID = process.env.ELEVENLABS_AGENT_ID || "agent_8301kfhhaca4ert90ghs9j0qcy7n";
-const PHONE_NUMBER_ID = process.env.ELEVENLABS_PHONE_NUMBER_ID || "phnum_5201kfhj7swde5gvjjqasg1qeb6d";
+const AGENT_ID =
+  process.env.ELEVENLABS_AGENT_ID || "agent_8301kfhhaca4ert90ghs9j0qcy7n";
+const PHONE_NUMBER_ID =
+  process.env.ELEVENLABS_PHONE_NUMBER_ID ||
+  "phnum_5201kfhj7swde5gvjjqasg1qeb6d";
 
 interface PhoneCallInput {
   to: string;
@@ -24,14 +27,16 @@ interface PhoneCallInput {
 
 export async function executePhoneCall(
   { to, prompt, firstMessage, language, timeoutMinutes = 10 }: PhoneCallInput,
-  context: AgentContext
+  projectId: string,
 ) {
-  const { projectId } = context;
   contactLog.tool("phoneCall", { to, projectId, timeoutMinutes });
   try {
     // Initiate the outbound call via ElevenLabs
-    contactLog.info("Initiating outbound call via ElevenLabs", { to, agentId: AGENT_ID });
-    
+    contactLog.info("Initiating outbound call via ElevenLabs", {
+      to,
+      agentId: AGENT_ID,
+    });
+
     const call = await elevenlabs.conversationalAi.twilio.outboundCall({
       agentId: AGENT_ID,
       agentPhoneNumberId: PHONE_NUMBER_ID,
@@ -45,8 +50,8 @@ export async function executePhoneCall(
             firstMessage,
             language,
           },
-        }
-      }
+        },
+      },
     });
 
     contactLog.info("Call initiated", { call });
@@ -67,7 +72,10 @@ export async function executePhoneCall(
 
     // Create a wait token for this call
     contactLog.info("Creating wait token for phone call", { timeoutMinutes });
-    const waitTokenId = await createPhoneWaitToken(conversationId, timeoutMinutes);
+    const waitTokenId = await createPhoneWaitToken(
+      conversationId,
+      timeoutMinutes,
+    );
     contactLog.info("Wait token created", { waitTokenId });
 
     // Record the phone conversation in the database
@@ -81,19 +89,27 @@ export async function executePhoneCall(
       status: "pending",
       startedAt: new Date(),
     });
-    contactLog.info("Phone conversation recorded in database", { conversationId });
+    contactLog.info("Phone conversation recorded in database", {
+      conversationId,
+    });
 
     // Now wait for the call to complete
-    contactLog.info("Waiting for phone call to complete (this may take minutes)", {
-      conversationId,
-      waitTokenId,
-      timeoutMinutes,
-    });
+    contactLog.info(
+      "Waiting for phone call to complete (this may take minutes)",
+      {
+        conversationId,
+        waitTokenId,
+        timeoutMinutes,
+      },
+    );
 
     const result = await waitForPhoneCallToken(waitTokenId);
 
     if (!result) {
-      contactLog.warn("Phone call timed out", { conversationId, timeoutMinutes });
+      contactLog.warn("Phone call timed out", {
+        conversationId,
+        timeoutMinutes,
+      });
 
       // Update status to timeout
       await db
@@ -109,8 +125,14 @@ export async function executePhoneCall(
       };
     }
 
-    contactLog.info("Phone call completed!", { conversationId, terminationReason: result.terminationReason });
-    contactLog.toolResult("phoneCall", { success: true, callDurationSecs: result.callDurationSecs });
+    contactLog.info("Phone call completed!", {
+      conversationId,
+      terminationReason: result.terminationReason,
+    });
+    contactLog.toolResult("phoneCall", {
+      success: true,
+      callDurationSecs: result.callDurationSecs,
+    });
 
     return {
       success: true,

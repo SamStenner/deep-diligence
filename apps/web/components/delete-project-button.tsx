@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Loader2, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Trash2, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from "react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,6 +14,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 interface DeleteProjectButtonProps {
   projectId: string;

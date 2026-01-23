@@ -1,4 +1,7 @@
-import Firecrawl, { type Document, type SearchResultWeb } from '@mendable/firecrawl-js';
+import Firecrawl, {
+  type Document,
+  type SearchResultWeb,
+} from "@mendable/firecrawl-js";
 
 export const firecrawl = new Firecrawl({
   apiUrl: process.env.FIRECRAWL_API_URL,

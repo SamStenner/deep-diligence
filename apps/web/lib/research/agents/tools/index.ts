@@ -1,4 +1,2 @@
-export { webTools, type WebTools } from "./web.tools";
-export { utilityTools, type UtilityTools } from "./utility.tools";
-
-
+export { type UtilityTools, utilityTools } from "./utility.tools";
+export { type WebTools, webTools } from "./web.tools";

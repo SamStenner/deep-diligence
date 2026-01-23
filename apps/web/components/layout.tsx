@@ -1,24 +1,14 @@
 import { Search } from "lucide-react";
 import Link from "next/link";
-import { HTMLAttributes } from "react";
-import { cn } from "@/lib/utils";
+import type { HTMLAttributes } from "react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { cn } from "@/lib/utils";
 
 type MainLayoutProps = HTMLAttributes<HTMLDivElement>;
 
-export function Layout({
-  children,
-  className,
-  ...props
-}: MainLayoutProps) {
+export function Layout({ children, className, ...props }: MainLayoutProps) {
   return (
-    <div
-      className={cn(
-        "flex flex-col",
-        className,
-      )}
-      {...props}
-    >
+    <div className={cn("flex flex-col", className)} {...props}>
       <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50 shrink-0">
         <div className="container mx-auto flex h-12 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2">

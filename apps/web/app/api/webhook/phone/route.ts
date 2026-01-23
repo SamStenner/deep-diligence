@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { wait } from "@trigger.dev/sdk/v3";
+import { eq } from "drizzle-orm";
+import { NextResponse } from "next/server";
 import { db } from "@/lib/data/client";
 import { phoneConversations } from "@/lib/data/schema";
-import { eq } from "drizzle-orm";
 import type { PhoneCallPayload } from "@/trigger/research.task";
 
 // ElevenLabs webhook payload types
@@ -62,7 +62,7 @@ interface ElevenLabsWebhookPayload {
  */
 function mapToPhoneStatus(
   status: string,
-  terminationReason: string
+  terminationReason: string,
 ): "completed" | "failed" | "no_answer" {
   if (status === "done") {
     // Check termination reason for more granular status
@@ -117,14 +117,14 @@ export async function POST(request: Request) {
       .where(eq(phoneConversations.conversationId, conversationId));
 
     const pendingConversation = conversations.find(
-      (c) => c.status === "pending"
+      (c) => c.status === "pending",
     );
 
     if (!pendingConversation) {
       console.warn("No pending conversation found for ID:", conversationId);
       return NextResponse.json(
         { error: "No pending conversation found for this call" },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
@@ -163,10 +163,13 @@ export async function POST(request: Request) {
       .where(eq(phoneConversations.id, pendingConversation.id));
 
     if (!pendingConversation.waitTokenId) {
-      console.warn("No wait token found for conversation:", pendingConversation.id);
+      console.warn(
+        "No wait token found for conversation:",
+        pendingConversation.id,
+      );
       return NextResponse.json(
         { error: "No wait token found for this conversation" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -183,7 +186,7 @@ export async function POST(request: Request) {
     // Complete the waitpoint token to resume the task
     await wait.completeToken<PhoneCallPayload>(
       pendingConversation.waitTokenId,
-      callPayload
+      callPayload,
     );
 
     console.log("Phone call processed for project:", projectId);
@@ -192,7 +195,7 @@ export async function POST(request: Request) {
     console.error("Error processing phone webhook:", error);
     return NextResponse.json(
       { error: "Failed to process webhook" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
